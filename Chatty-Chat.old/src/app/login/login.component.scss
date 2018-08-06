@@ -1,0 +1,45 @@
+@import '../../variables.scss';
+
+#frame{
+	position: absolute;
+	width: 100vw;
+	height: 100vh;
+	//text-align: center;
+	//vertical-align: middle;
+	//line-height: 100vh;
+	background: url('assets/network.svg') no-repeat;
+	background-size: cover;
+}
+
+#window{
+	display: inline-block;
+	width: 100vw;
+	max-width: 500px;
+	height: 300px;
+	background: $color-background-bright;
+	border-radius: $radius-large;
+	padding: 15px;
+	
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.title{
+	width: 100%;
+	text-align: center;
+
+	font-family: 'Consolas';
+	font-size: 4ex;
+	font-weight: bold;
+	letter-spacing: 5px;
+	color: #5D4252;
+}
+
+.welcome{
+	width: 100%;
+	text-align: center;
+
+	color: #5C4D56;
+}

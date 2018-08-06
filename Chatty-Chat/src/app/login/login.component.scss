@@ -1,0 +1,74 @@
+@import '../../variables.scss';
+
+#frame{
+	position: absolute;
+	width: 100vw;
+	height: 100vh;
+	//text-align: center;
+	//vertical-align: middle;
+	//line-height: 100vh;
+	background: url('/assets/network.svg') no-repeat;
+	background-size: cover;
+}
+
+#window{
+	display: inline-block;
+	width: 100vw;
+	max-width: 400px;
+	background: $color-background-bright;
+	border-radius: $radius-large;
+	padding: 15px;
+	
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.title{
+	width: 100%;
+	text-align: center;
+	margin-bottom: 0px;
+
+	font-family: 'Consolas';
+	font-size: 4ex;
+	font-weight: bold;
+	letter-spacing: 5px;
+	color: #5D4252;
+}
+
+.welcome{
+	width: 100%;
+	text-align: center;
+
+	color: #5C4D56;
+}
+
+#signin{
+	padding: 15px;
+}
+
+.text-input{
+	width: 100%;
+}
+
+.center-button{
+	width: 100%;
+	background: $color-primary;
+	color: $color-text-bright;
+}
+
+#loading{
+	padding: 10px;
+	text-align: center;
+}
+
+.spinner{
+	display: inline-block;
+	width: 30px;
+	height: 30px;
+}
+
+mat-spinner circle{
+	stroke: $color-primary;
+}

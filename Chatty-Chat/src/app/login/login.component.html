@@ -1,0 +1,47 @@
+<div id="frame"><!--Entire page-->
+  <div id="window"><!--centered window-->
+
+    <!--Title-->
+    <p class="title">
+      Chatty Chat
+    </p>
+    
+    <!--Welcome message-->
+    <p class="welcome">
+      Welcome to chattys chat system, please sign in.
+    </p>
+    {{test}}
+    {{invalidUsername}}
+    <!--Signin components-->
+    <div id="signin" *ngIf="!signinInProcess">
+      <form class="signin-form" (submit)="signin($)">
+        <mat-form-field class="text-input">
+          <input matInput placeholder="Username" name="username" [(ngModel)]="username" [formControl]="usernameFormControl">
+          <mat-error *ngIf="invalidUsername">
+            Invalid username
+          </mat-error>
+        </mat-form-field>
+      
+        <mat-form-field class="text-input">
+          <input matInput placeholder="Password" name="password" [(ngModel)]="password">
+          <mat-error *ngIf="invalidPassword">
+            Invalid password
+          </mat-error>
+        </mat-form-field>
+
+        <button mat-raised-button class="center-button">Sign in</button>
+      </form>
+    </div>
+
+    <!--Checking sign in components-->
+    <div id="loading" *ngIf="signinInProcess">
+      <div class="spinner">
+        <mat-spinner diameter="30"> </mat-spinner>
+      </div>
+      
+      <p class="welcome">
+        Signing in
+      </p>
+    </div>
+  </div>
+</div>
