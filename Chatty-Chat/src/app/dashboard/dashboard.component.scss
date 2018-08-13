@@ -1,0 +1,70 @@
+@import '../../variables.scss';
+
+#content{
+	height: 100vh;
+	width: 100vw;
+	background-color: $color-background-primary;
+	color: $color-text-bright;
+
+	td{
+		padding: 15px;
+	}
+
+	.top-row{
+		height: 80px;
+
+		.title{
+			width: 400px;
+			background-color: rgba(0, 0, 0, 0.7);
+			
+			text-align: center;
+			font-family: 'Consolas';
+			font-size: 4ex;
+			font-weight: bold;
+			letter-spacing: 5px;
+		}
+
+		.top-bar{
+			background-color: rgba(0, 0, 0, 0.4);
+
+			.channel-name{
+				vertical-align: middle;
+			}
+			
+			.sign-out{
+				float: right;
+			}
+		}
+	}
+
+	.middle-row{
+		.groups{
+			background-color: rgba(0, 0, 0, 0.4);
+
+		}
+
+		.messages{
+
+		}
+
+		.participants{
+			width: 200px;
+			background-color: rgba(0, 0, 0, 0.2);
+
+		}
+	}
+
+	.bottom-row{
+		height: 80px;
+
+		.user-settings{
+			background-color: rgba(0, 0, 0, 0.7);
+
+		}
+
+		.new-message{
+			background-color: rgba(0, 0, 0, 0.4);
+
+		}
+	}
+}

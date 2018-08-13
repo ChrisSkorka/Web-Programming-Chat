@@ -10,13 +10,12 @@
     <p class="welcome">
       Welcome to chattys chat system, please sign in.
     </p>
-    {{test}}
-    {{invalidUsername}}
     <!--Signin components-->
     <div id="signin" *ngIf="!signinInProcess">
       <form class="signin-form" (submit)="signin($)">
         <mat-form-field class="text-input">
-          <input matInput placeholder="Username" name="username" [(ngModel)]="username" [formControl]="usernameFormControl">
+          <input matInput placeholder="Username" name="username" [(ngModel)]="username">
+          <!-- <input matInput placeholder="Username" name="username" [(ngModel)]="username" [formControl]="usernameFormControl"> -->
           <mat-error *ngIf="invalidUsername">
             Invalid username
           </mat-error>

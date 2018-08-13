@@ -99,3 +99,7 @@ Data structures:
     - Sender:int
     - Content:string
     - Datetime:int
+
+Routes
+- /
+- /[groupID/channelID]

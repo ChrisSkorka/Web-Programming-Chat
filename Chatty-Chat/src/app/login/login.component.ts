@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import {FormControl, Validators} from '@angular/forms';
+//import {FormControl, Validators} from '@angular/forms';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -13,19 +14,26 @@ export class LoginComponent implements OnInit {
   password:string = '';
   invalidUsername:boolean = false;
   invalidPassword:boolean = false;
-  test:string = '';
-  constructor() { }
+
+  constructor(private router:Router){}
 
   ngOnInit() {
   }
 
-  usernameFormControl = new FormControl('', [
-    (fc: FormControl) => {this.test = fc.value;return this.invalidUsername ? {
-      validatePattern: {
-        valid: true
-      }
-    } : null;},
-  ]);
+  // @Output() onAuthorised: EventEmitter<null> = new EventEmitter();
+
+  autherise(){
+    //this.onAuthorised.emit();
+    this.router.navigateByUrl("/dash");
+  }
+
+  // usernameFormControl = new FormControl('', [
+  //   (fc: FormControl) => {this.test = fc.value;return this.invalidUsername ? {
+  //     validatePattern: {
+  //       valid: true
+  //     }
+  //   } : null;},
+  // ]);
 
   signin(event){
     //event.preventDefault();
@@ -33,18 +41,21 @@ export class LoginComponent implements OnInit {
     this.signinInProcess = true;
     if(this.username == 'TechSupport420'){
       this.invalidUsername = false;
-      this.usernameFormControl.setErrors('', {emitEvent: true});
+      //this.usernameFormControl.setErrors('', {emitEvent: true});
       if(this.password == 'password'){
         this.invalidPassword = false;
+
+        this.autherise();
 
       }else{ // password doesnt match
         this.signinInProcess = false;
         this.invalidPassword = true;
       }
+
     }else{ // user doesnt exists
       this.signinInProcess = false;
       this.invalidUsername = true;
-      this.usernameFormControl.setErrors('', {emitEvent: true});
+      //this.usernameFormControl.setErrors('', {emitEvent: true});
     }
 
   }

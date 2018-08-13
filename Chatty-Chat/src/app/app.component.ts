@@ -7,4 +7,10 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'Chatty-Chat';
+
+  userVerified:boolean = false;
+
+  onAuthorised(){
+
+  }
 }
