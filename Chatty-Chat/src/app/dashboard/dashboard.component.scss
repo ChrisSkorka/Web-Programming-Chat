@@ -28,7 +28,8 @@
 			background-color: rgba(0, 0, 0, 0.4);
 
 			.channel-name{
-				vertical-align: middle;
+				font-size: 2ex;
+				font-weight: bold;
 			}
 			
 			.sign-out{
@@ -40,6 +41,17 @@
 	.middle-row{
 		.groups{
 			background-color: rgba(0, 0, 0, 0.4);
+			padding: 15px;
+
+			.group{
+				background-color: rgba(0, 0, 0, 0.3);
+				padding: 15px;
+				border-radius: $radius-small;
+
+				img{
+					float: right;
+				}
+			}
 
 		}
 
@@ -60,6 +72,17 @@
 		.user-settings{
 			background-color: rgba(0, 0, 0, 0.7);
 
+			.username{
+				font-size: 1.8ex;
+			}
+
+			.useremail{
+				font-size: 1.2ex;
+			}
+
+			.user-settings-button{
+				float: right;
+			}
 		}
 
 		.new-message{

@@ -7,12 +7,24 @@
     </td>
   </tr>
   <tr class="middle-row">
-    <td class="groups">Groups</td>
+    <td class="groups">
+      <p class="section-header">Groups</p>
+      <div class="group" *ngFor="let group of groups; index as i" (click)="onGroupClick(i)">
+          <span>{{group.Name}}</span>
+          <img src="/assets/expand_more.png">
+      </div>
+    </td>
     <td class="messages">Messages</td>
     <td class="participants" rowspan="2" style="width: 200px;">Participants</td>
   </tr>
   <tr class="bottom-row">
-    <td class="user-settings">User</td>
+    <td class="user-settings">
+      <p class="username">{{username}}</p>
+      <p class="useremail">{{useremail}}</p>
+      <button class="user-settings-button" mat-mini-fab>
+        <mat-icon aria-label="User settings">/assets/settings.png</mat-icon>
+      </button>
+    </td>
     <td class="new-message">New message</td>
   </tr>
 </table>
