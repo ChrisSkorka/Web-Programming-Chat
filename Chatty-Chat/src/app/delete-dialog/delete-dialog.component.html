@@ -1,0 +1,12 @@
+<h2 mat-dialog-title>Delete {{type}}</h2>
+
+<mat-dialog-content>
+  <p>
+    Are you sure you want to delete {{name}}?
+  </p>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+    <button class="mat-raised-button" (click)="cancel()">Cancel</button>
+    <button class="mat-raised-button mat-primary" (click)="delete()">Delete</button>
+</mat-dialog-actions>

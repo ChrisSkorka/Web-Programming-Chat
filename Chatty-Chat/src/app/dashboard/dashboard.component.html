@@ -50,24 +50,28 @@
           |   |     | |  
           -------------  -->
     <td class="groups">
-      <p class="section-header"><span>Groups</span><span *ngIf="groupadmin" (click)="onManageGroupsClick()">Manage</span></p>
+      <p class="section-header"><span>Groups</span><span class="clickable" *ngIf="groupadmin" (click)="onManageGroupsClick()">Manage</span></p>
       <div class="group-contianer" *ngFor="let group of groups; index as i">
-        <div class="group" [class.expanded]="channel_list_visibilities[i]" (click)="onGroupClick(i)">
+        <div class="group clickable" [class.expanded]="channel_list_visibilities[i]" (click)="onGroupClick(i)">
           <span>{{group.name}}</span>
-          <img src="/assets/expand_more.png">
-          <span *ngIf="editing_groups" (click)="onClickDeleteGroup(i)">Delete</span>
+          <img class="clickable" src="/assets/expand_more.png">
+          <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteGroup(i)">Delete</span>
+          <span class="clickable" *ngIf="editing_groups" (click)="onClickGroupMembers(i)">Members</span>
         </div>
         <div class="channel-list" *ngIf="channel_list_visibilities[i]">
-          <div class="channel" *ngFor="let channel of group.channels; index as j" (click)="showChannel(channel)">
+          <div class="channel clickable" *ngFor="let channel of group.channels; index as j" (click)="onClickChannel(channel)">
             <span># {{channel.name}}</span>
-            <span *ngIf="editing_groups" (click)="onClickDeleteChannel(i, j)">Delete</span>
+            <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteChannel(i, j)">Delete</span>
+            <span class="clickable" *ngIf="editing_groups" (click)="onClickChannelMembers(i, j)">Members</span>
+          </div>
+          <div class="channel clickable" *ngIf="editing_groups" (click)="onClickNewChannel(i)">
+            <span class="clickable">+ Create new channel</span>
           </div>
         </div>
       </div>
       <div class="group-contianer" *ngIf="editing_groups">
-          <div class="group" (click)="onNewGroupClick()">
-            <span>Create new Group</span>
-            <img src="/assets/expand_more.png">
+          <div class="group clickable" (click)="onNewGroupClick()">
+            <span class="clickable">+ Create new group</span>
           </div>
       </div>
     </td>
@@ -124,13 +128,18 @@
           | X |     | |  
           -------------  -->
     <td class="user-settings">
-      <div>
-        <p class="username">{{username}}</p>
-        <p class="useremail">{{useremail}}</p>
-      </div>
-      <button class="user-settings-button" mat-mini-fab>
+      <table>
+        <tr>
+          <td class="username">{{username}}</td>
+          <td class="manage-users clickable" (click)="onClickManageUsers()">Manage Users</td>
+        </tr>
+        <tr>
+          <td class="useremail" colspan="2">{{useremail}}</td>
+        </tr>
+      </table>
+      <!-- <button class="user-settings-button" mat-mini-fab>
         <mat-icon aria-label="User settings" svgIcon="settings"></mat-icon>
-      </button>
+      </button> -->
     </td>
     
     <!--  ------------- 
@@ -149,7 +158,7 @@
           {{username}}
         </div>
         <input class="content" placeholder="New message" name="newmessage" [(ngModel)]="newmessage">
-        <div class="send" (click)="submitMessage()"></div>
+        <div class="send clickable" (click)="submitMessage()"></div>
       </div>
 
     </td>

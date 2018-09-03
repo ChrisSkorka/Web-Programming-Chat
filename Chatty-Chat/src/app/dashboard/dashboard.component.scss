@@ -11,6 +11,15 @@
 		padding: 15px;
 	}
 
+	.warning{
+		color: $color-text-warning;
+	}
+
+	.clickable{
+		cursor: pointer;
+		text-decoration: underline;
+	}
+
 	.top-row{
 		height: 80px;
 
@@ -71,14 +80,10 @@
 					span:first-child{
 						float: left;
 					}
-					img{
+					*:not(:first-child){
 						float: right;
-						padding-left: 10px;
-					}
-					span:nth-child(3){
-						float: right;
-						text-decoration: underline;
-						
+						padding: 0px 5px;
+						opacity: 0.95;
 					}
 				}
 				.expanded{
@@ -89,6 +94,7 @@
 				.channel-list{
 					padding: 15px;
 					padding-top: 0px;
+					border-top: 2px solid $color-background-primary;
 
 					.channel{
 						margin-top: 10px;
@@ -99,10 +105,10 @@
 						span:first-child{
 							float: left;
 						}
-	
-						span:nth-child(2){
+						*:not(:first-child){
 							float: right;
-							text-decoration: underline;
+							padding: 0px 5px;
+							opacity: 0.95;
 						}
 					}
 				}
@@ -181,15 +187,23 @@
 		.user-settings{
 			background-color: rgba(0, 0, 0, 0.7);
 
-			div{
-				float: left;
+			table{
+				width: 100%;
 
-				.username{
-					font-size: 1.8ex;
+				td{
+					padding: 3px;
 				}
 
+				.username{
+					text-align: left;
+					font-size: 2ex;
+				}
 				.useremail{
-					font-size: 1.2ex;
+					text-align: left;
+					font-size: 1.5ex;
+				}
+				.manage-users{
+					text-align: right;
 				}
 			}
 
@@ -214,6 +228,7 @@
 					height: 30px;
 					padding: 15px;
 		
+					outline: none;
 					border: none;
 					border-left: 2px solid $color-background-primary;
 					border-right: 2px solid $color-background-primary;

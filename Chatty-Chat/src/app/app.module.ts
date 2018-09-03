@@ -14,12 +14,16 @@ import { HttpClientModule } from '@angular/common/http';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
+import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
+import { NewDialogComponent } from './new-dialog/new-dialog.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
-    DashboardComponent
+    DashboardComponent,
+    DeleteDialogComponent,
+    NewDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -39,7 +43,8 @@ import { DashboardComponent } from './dashboard/dashboard.component';
     ])
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  entryComponents: [DeleteDialogComponent],
 })
 export class AppModule {
   constructor(matIconRegistry: MatIconRegistry, domSanitizer: DomSanitizer){
