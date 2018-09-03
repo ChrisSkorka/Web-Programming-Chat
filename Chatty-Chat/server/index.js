@@ -46,9 +46,9 @@ var groups = {
 };
 
 var channels = {
-	0:{groups:0, name:'NowListenClosely', participants:[0, 1, 2]},
-	1:{groups:0, name:'HeresALittleLesson', participants:[1, 2]},
-	2:{groups:1, name:'BeepTest', participants:[0, 2]},
+	0:{group:0, name:'NowListenClosely', participants:[0, 1, 2]},
+	1:{group:0, name:'HeresALittleLesson', participants:[1, 2]},
+	2:{group:1, name:'BeepTest', participants:[0, 2]},
 };
 
 var messages = {
@@ -64,6 +64,8 @@ var messages = {
 		{sender:2, content:'The 20m multistage fitness test (MSFT) is a commonly used maximal running aerobic fitness test. It is also known as the 20 meter shuttle run test, beep or bleep test among other names.', datetime:0},
 	],
 };
+
+var id = 10;
 
 app.use(bodyParser.json())
 app.use(express.static(__dirname + "./dest"));
@@ -83,6 +85,18 @@ app.post("/user", (req, res) => {
 });
 app.post("/channel", (req, res) => {
     res.send(JSON.stringify(routeChannel(req)));
+});
+app.post("/new-group", (req, res) => {
+    res.send(JSON.stringify(routeNewGroup(req)));
+});
+app.post("/new-channel", (req, res) => {
+    res.send(JSON.stringify(routeNewChannel(req)));
+});
+app.post("/delete-group", (req, res) => {
+    res.send(JSON.stringify(routeDeleteGroup(req)));
+});
+app.post("/delete-channel", (req, res) => {
+    res.send(JSON.stringify(routeDeleteChannel(req)));
 });
 
 // proces the login route
@@ -193,6 +207,208 @@ function routeChannel(req){
 	return response;
 }
 
+// process the new group route
+// check permission, creates the group, adds the creator and returns feedback
+function routeNewGroup(req){
+	// template
+	let response = templateResponse();
+
+	// if user exists
+	let userID = req.body.userID;
+	if(userID in users){
+
+		let user = users[userID];
+
+		// check if user has permission
+		if(user.groupadmin || user.superadmin){
+
+			// generate group, add it to the groups and user
+			let group_name = req.body.name;
+			let group_id = generateID();
+			let new_group = {name:group_name, participants:[userID], channels:[]};
+			groups[group_id] = new_group;
+			user.groups[group_id] = [];
+
+			response.data = group_id;
+
+		// user does not have permission
+		}else{
+			response.error = 'User does not have the necessary permission';
+		}
+
+	// if user cannot be found
+	}else{
+		response.error = 'User does not exist';
+	}
+
+	return response;
+}
+
+// process the new channel route
+// check permission, creates the channel, adds the creator and returns feedback
+function routeNewChannel(req){
+	// template
+	let response = templateResponse();
+
+	// if user exists
+	let userID = req.body.userID;
+	if(userID in users){
+
+		let user = users[userID];
+
+		// check if user has permission
+		if(user.groupadmin || user.superadmin){
+
+			let groupID = req.body.groupID;
+
+			// check if groups exists
+			if(groupID in groups){
+				// generate channel, add it to the group and channels and user
+				let channel_name = req.body.name;
+				let channel_id = generateID();
+				let new_channel = {group:groupID, name:channel_name, participants:[userID]};
+				groups[groupID].channels.push(channel_id);
+				channels[channel_id] = new_channel;
+				messages[channel_id] = [];
+				user.groups[groupID].push(channel_id);
+
+				response.data = channel_id;
+
+			// groups does not exist
+			}else{
+				response.error = 'Specified group does not exist';
+			}
+
+		// user does not have permission
+		}else{
+			response.error = 'User does not have the necessary permission';
+		}
+
+	// if user cannot be found
+	}else{
+		response.error = 'User does not exist';
+	}
+
+	return response;
+}
+
+// process the delete group route
+// check permission, delete group from groups and users
+function routeDeleteGroup(req){
+	// template
+	let response = templateResponse();
+
+	// if user exists
+	let userID = req.body.userID;
+	if(userID in users){
+
+		let user = users[userID];
+
+		// check if user has permission
+		if(user.groupadmin || user.superadmin){
+
+			let groupID = req.body.groupID;
+
+			// check if groups exists
+			if(groupID in groups){
+
+				// delete group from groups and users
+				let group = groups[groupID];
+				let group_channels = group.channels;
+				
+				// remove channel from channels and message from messages
+				for(let channelID of group_channels){
+					delete channels[channelID];
+					delete messages[channelID];
+				}
+
+				// remove group from users
+				for(let participantID of group.participants){
+					delete users[participantID].groups[groupID];
+				}
+
+				// remove group from groups
+				delete groups[groupID];
+
+				response.data = true;
+
+			// groups does not exist
+			}else{
+				response.error = 'Specified group does not exist';
+			}
+
+		// user does not have permission
+		}else{
+			response.error = 'User does not have the necessary permission';
+		}
+
+	// if user cannot be found
+	}else{
+		response.error = 'User does not exist';
+	}
+
+	return response;
+}
+
+// process the delete channel route
+// check permission, delete group from groups and users
+function routeDeleteChannel(req){
+	// template
+	let response = templateResponse();
+
+	// if user exists
+	let userID = req.body.userID;
+	if(userID in users){
+
+		let user = users[userID];
+
+		// check if user has permission
+		if(user.groupadmin || user.superadmin){
+
+			let channelID = req.body.channelID;
+
+			// check if channel exists
+			if(channelID in channels){
+
+				let channel = channels[channelID];
+				let groupID = channel.group;
+				let group = groups[groupID];
+				
+				// remove channel from group
+				let index = group.channels.indexOf(channelID);
+				group.channels.splice(index, 1);
+
+				// remove channel from users
+				for(let participantID of channel.participants){
+					let index = users[participantID].groups[groupID].indexOf(channelID);
+					users[participantID].groups[groupID].splice(index, 1);
+				}
+
+				// remove channel from channel and messages from messages
+				delete channels[channelID];
+				delete messages[channelID];
+
+				response.data = true;
+
+			// channel does not exist
+			}else{
+				response.error = 'Specified channel does not exist';
+			}
+
+		// user does not have permission
+		}else{
+			response.error = 'User does not have the necessary permission';
+		}
+
+	// if user cannot be found
+	}else{
+		response.error = 'User does not exist';
+	}
+
+	return response;
+}
+
+// template response
 function templateResponse(){
 	return {
 		data: null,
@@ -200,7 +416,10 @@ function templateResponse(){
 	};
 }
 
-
+// generate a new ID and return it
+function generateID(){
+	return id++;
+}
 
 console.log("server starting");
 http.listen(3000);

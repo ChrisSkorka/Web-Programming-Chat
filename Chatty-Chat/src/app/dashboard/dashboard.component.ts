@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import { MatDialog, MatDialogConfig } from "@angular/material";
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { DeleteDialogComponent } from '../delete-dialog/delete-dialog.component';
+import { NewDialogComponent } from '../new-dialog/new-dialog.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -33,34 +34,13 @@ export class DashboardComponent implements OnInit {
   participants:any = [];
   messages:any = [];
 
-  constructor(private activatedRoute:ActivatedRoute, private http: HttpClient, private dialog: MatDialog) {
-    this.userID = activatedRoute.snapshot.params['userID'];
+  constructor(private router:Router, private http: HttpClient, private dialog: MatDialog) {
+    
   }
 
   ngOnInit() {
-
-    // get user data
-    this.http.post(
-      'http://localhost:3000/user', 
-      {userID:this.userID}
-    ).subscribe(
-      (res:any) => {
-        if(res.error == null){
-          this.superadmin = res.data.userdata.superadmin;
-          this.groupadmin = res.data.userdata.groupadmin;
-          this.username = res.data.userdata.username;
-          this.useremail = res.data.userdata.useremail;
-          this.color = res.data.userdata.color;
-          this.groups = res.data.groups;
-          this.channel_list_visibilities = new Array(this.groups.length).fill(false); // array of false's, one per group
-        }else{
-          alert(res.error);
-        }
-      },
-      err => {
-        alert("Error connecting to the server");
-      }
-    );
+    this.userID = Number(localStorage.getItem('userID'));
+    this.refreshUserData();
   }
 
   onGroupClick(index){
@@ -95,8 +75,7 @@ export class DashboardComponent implements OnInit {
     this.editing_groups = !this.editing_groups;
   }
 
-  onClickDeleteGroup(i){
-    let group = this.groups[i];
+  onClickDeleteGroup(group){
 
     let dialogConfig = new MatDialogConfig();
 
@@ -105,20 +84,34 @@ export class DashboardComponent implements OnInit {
 
     dialogConfig.data = {
         name: group.name,
-        type: 'Group'
+        type: 'Group',
     };
     
     let dialogRef = this.dialog.open(DeleteDialogComponent, dialogConfig);
 
     dialogRef.afterClosed().subscribe((selection) => {
       if(selection){
-        // TODO delete
+        // send delete group request
+        this.http.post(
+          'http://localhost:3000/delete-group', 
+          {userID:this.userID, groupID:group.ID}
+        ).subscribe(
+          (res:any) => {
+            if(res.error == null){
+              this.refreshUserData();
+            }else{
+              alert(res.error);
+            }
+          },
+          err => {
+            alert("Error connecting to the server");
+          }
+        );
       }
     });
   }
 
-  onClickDeleteChannel(i, j){
-    let channel = this.groups[i].channels[j];
+  onClickDeleteChannel(channel){
 
     let dialogConfig = new MatDialogConfig();
 
@@ -134,7 +127,22 @@ export class DashboardComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((selection) => {
       if(selection){
-        // TODO delete
+        // send delete channel request
+        this.http.post(
+          'http://localhost:3000/delete-channel', 
+          {userID:this.userID, channelID:channel.ID}
+        ).subscribe(
+          (res:any) => {
+            if(res.error == null){
+              this.refreshUserData();
+            }else{
+              alert(res.error);
+            }
+          },
+          err => {
+            alert("Error connecting to the server");
+          }
+        );
       }
     });
   }
@@ -147,20 +155,116 @@ export class DashboardComponent implements OnInit {
     console.log("Edit channel members " + i + " " + j);
   }
 
-  onNewGroupClick(){
-    console.log("Create new group");
+  onClickNewGroup(){
+    let dialogConfig = new MatDialogConfig();
+
+    dialogConfig.disableClose = true;
+    dialogConfig.autoFocus = true;
+
+    dialogConfig.data = {
+        type: 'Group'
+    };
+    
+    let dialogRef = this.dialog.open(NewDialogComponent, dialogConfig);
+
+    dialogRef.afterClosed().subscribe((selection) => {
+      if(selection){
+        // send create new group request
+        this.http.post(
+          'http://localhost:3000/new-group', 
+          {userID:this.userID, name:selection}
+        ).subscribe(
+          (res:any) => {
+            if(res.error == null){
+              this.refreshUserData();
+            }else{
+              alert(res.error);
+            }
+          },
+          err => {
+            alert("Error connecting to the server");
+          }
+        );
+      }
+    });
   }
 
-  onClickNewChannel(i){
-    console.log("Create new channel under " + i);
+  onClickNewChannel(group){
+    let dialogConfig = new MatDialogConfig();
+
+    dialogConfig.disableClose = true;
+    dialogConfig.autoFocus = true;
+
+    dialogConfig.data = {
+        type: 'Channel'
+    };
+    
+    let dialogRef = this.dialog.open(NewDialogComponent, dialogConfig);
+
+    dialogRef.afterClosed().subscribe((selection) => {
+      if(selection){
+        // send create new channel request
+        this.http.post(
+          'http://localhost:3000/new-channel', 
+          {userID:this.userID, groupID:group.ID, name:selection}
+        ).subscribe(
+          (res:any) => {
+            if(res.error == null){
+              this.refreshUserData();
+            }else{
+              alert(res.error);
+            }
+          },
+          err => {
+            alert("Error connecting to the server");
+          }
+        );
+      }
+    });
   }
 
-  onClickManageUsers(){
-    console.log("Manage users");
+  onClickNewUsers(){
+    console.log("New users");
+  }
+
+  onClickDeleteUsers(){
+    console.log("Delete users");
   }
 
   submitMessage(){
     alert("Here we fucking go... " + this.newmessage);
+  }
+
+  // gets userdate, group lists and channel lists and displays them
+  refreshUserData(){
+    // get user data
+    this.http.post(
+      'http://localhost:3000/user', 
+      {userID:this.userID}
+    ).subscribe(
+      (res:any) => {
+        if(res.error == null){
+          this.superadmin = res.data.userdata.superadmin;
+          this.groupadmin = res.data.userdata.groupadmin;
+          this.username = res.data.userdata.username;
+          this.useremail = res.data.userdata.useremail;
+          this.color = res.data.userdata.color;
+          this.groups = res.data.groups;
+          this.channel_list_visibilities = new Array(this.groups.length).fill(false); // array of false's, one per group
+        }else{
+          alert(res.error);
+        }
+      },
+      err => {
+        alert("Error connecting to the server");
+      }
+    );
+  }
+
+  // sigh out user
+  signout(){
+    localStorage.removeItem('userID');
+    this.router.navigate(['/']);
   }
 
   //get rgb color string with specified hue

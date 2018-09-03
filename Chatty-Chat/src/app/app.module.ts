@@ -16,6 +16,7 @@ import { LoginComponent } from './login/login.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
 import { NewDialogComponent } from './new-dialog/new-dialog.component';
+import { NewUserDialogComponent } from './new-user-dialog/new-user-dialog.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +24,8 @@ import { NewDialogComponent } from './new-dialog/new-dialog.component';
     LoginComponent,
     DashboardComponent,
     DeleteDialogComponent,
-    NewDialogComponent
+    NewDialogComponent,
+    NewUserDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -39,12 +41,12 @@ import { NewDialogComponent } from './new-dialog/new-dialog.component';
     HttpClientModule,
     RouterModule.forRoot([
       {'path': '', 'component': LoginComponent},
-      {'path': 'dash/:userID', 'component': DashboardComponent},
+      {'path': 'dash', 'component': DashboardComponent},
     ])
   ],
   providers: [],
   bootstrap: [AppComponent],
-  entryComponents: [DeleteDialogComponent],
+  entryComponents: [DeleteDialogComponent, NewDialogComponent],
 })
 export class AppModule {
   constructor(matIconRegistry: MatIconRegistry, domSanitizer: DomSanitizer){

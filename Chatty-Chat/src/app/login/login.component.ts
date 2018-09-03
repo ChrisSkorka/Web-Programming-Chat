@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
 @Component({
   selector: 'app-login',
@@ -25,7 +25,8 @@ export class LoginComponent implements OnInit {
 
   autherise(userID:number){
     //this.onAuthorised.emit();
-    this.router.navigate(['/dash', userID]);
+    localStorage.setItem('userID', userID.toString());
+    this.router.navigate(['/dash']);
   }
 
   signin(event){

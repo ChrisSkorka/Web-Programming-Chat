@@ -35,7 +35,7 @@
           |   |     | |  
           -------------  -->
     <td class="sign-out">
-      <button mat-stroked-button>Sign out</button>
+      <button mat-stroked-button (click)="signout()">Sign out</button>
     </td>
   </tr>
   <tr class="middle-row">
@@ -50,27 +50,27 @@
           |   |     | |  
           -------------  -->
     <td class="groups">
-      <p class="section-header"><span>Groups</span><span class="clickable" *ngIf="groupadmin" (click)="onManageGroupsClick()">Manage</span></p>
+      <p class="section-header"><span>Groups</span><span class="clickable" *ngIf="groupadmin" (click)="onManageGroupsClick()">Edit</span></p>
       <div class="group-contianer" *ngFor="let group of groups; index as i">
         <div class="group clickable" [class.expanded]="channel_list_visibilities[i]" (click)="onGroupClick(i)">
           <span>{{group.name}}</span>
           <img class="clickable" src="/assets/expand_more.png">
-          <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteGroup(i)">Delete</span>
+          <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteGroup(group)">Delete</span>
           <span class="clickable" *ngIf="editing_groups" (click)="onClickGroupMembers(i)">Members</span>
         </div>
         <div class="channel-list" *ngIf="channel_list_visibilities[i]">
           <div class="channel clickable" *ngFor="let channel of group.channels; index as j" (click)="onClickChannel(channel)">
             <span># {{channel.name}}</span>
-            <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteChannel(i, j)">Delete</span>
+            <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteChannel(channel)">Delete</span>
             <span class="clickable" *ngIf="editing_groups" (click)="onClickChannelMembers(i, j)">Members</span>
           </div>
-          <div class="channel clickable" *ngIf="editing_groups" (click)="onClickNewChannel(i)">
+          <div class="channel clickable" *ngIf="editing_groups" (click)="onClickNewChannel(group)">
             <span class="clickable">+ Create new channel</span>
           </div>
         </div>
       </div>
       <div class="group-contianer" *ngIf="editing_groups">
-          <div class="group clickable" (click)="onNewGroupClick()">
+          <div class="group clickable" (click)="onClickNewGroup()">
             <span class="clickable">+ Create new group</span>
           </div>
       </div>
@@ -131,10 +131,11 @@
       <table>
         <tr>
           <td class="username">{{username}}</td>
-          <td class="manage-users clickable" (click)="onClickManageUsers()">Manage Users</td>
+          <td class="new-users clickable" (click)="onClickNewUsers()" *ngIf="groupadmin">New User</td>
         </tr>
         <tr>
-          <td class="useremail" colspan="2">{{useremail}}</td>
+          <td class="useremail">{{useremail}}</td>
+          <td class="delete-user clickable" (click)="onClickDeleteUsers()" *ngIf="superadmin">Remove User</td>
         </tr>
       </table>
       <!-- <button class="user-settings-button" mat-mini-fab>
