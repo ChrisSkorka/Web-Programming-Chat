@@ -4,7 +4,8 @@
 	height: 100vh;
 	width: 100vw;
 	background-color: $color-background-primary;
-	color: $color-text-bright;
+	border-collapse: collapse;
+	color: $color-text-faded;
 
 	td{
 		padding: 15px;
@@ -23,7 +24,6 @@
 			font-weight: bold;
 			letter-spacing: 5px;
 		}
-
 		.top-bar{
 			background-color: rgba(0, 0, 0, 0.4);
 
@@ -31,8 +31,10 @@
 				font-size: 2ex;
 				font-weight: bold;
 			}
-			
-			.sign-out{
+		}
+		.sign-out{
+			background-color: rgba(0, 0, 0, 0.7);
+			button{
 				float: right;
 			}
 		}
@@ -42,27 +44,94 @@
 		.groups{
 			background-color: rgba(0, 0, 0, 0.4);
 			padding: 15px;
+			vertical-align: top;
 
-			.group{
+			.group-contianer{
 				background-color: rgba(0, 0, 0, 0.3);
-				padding: 15px;
 				border-radius: $radius-small;
 
-				img{
-					float: right;
+				.group{
+					padding: 15px;
+					img{
+						float: right;
+					}
+				}
+				.expanded{
+					img{
+						transform: rotate(180deg);
+					}
+				}
+				.channel-list{
+					padding: 15px;
+
+					.channel{
+						padding: 5px 0px;
+					}
 				}
 			}
-
 		}
 
-		.messages{
+		.message-list{
+			vertical-align: bottom;
+			.message{
+				width: 100%;
+				border-radius: $radius-large;
+				margin-top: 15px;
 
+				.username{
+					display: inline-block;
+					vertical-align: top;
+
+					width: 100px;
+					padding: 20px 15px;
+
+					overflow: hidden;
+					text-overflow: ellipsis;
+					font-size: 1.5ex;
+				}
+				.content{
+					display: inline-block;
+					vertical-align: top;
+					
+					width: calc(100% - 130px - 130px - 30px - 4px);
+					padding: 20px 15px;
+
+					border-left: 2px solid $color-background-primary;
+					border-right: 2px solid $color-background-primary;
+				}
+				.datetime{
+					display: inline-block;
+					vertical-align: top;
+
+					width: 100px;
+					padding: 20px 15px;
+					
+					font-size: 1.5ex;
+				}
+			}
 		}
 
 		.participants{
 			width: 200px;
 			background-color: rgba(0, 0, 0, 0.2);
+			vertical-align: top;
 
+			.participant-name{
+				display: inline-block;
+				vertical-align: top;
+				width: calc(200px - 4em);
+				margin-top: 5px;
+				
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			.participant-admin{
+				display: inline-block;
+				vertical-align: top;
+				width: 4em;
+				text-align: right;
+				margin-top: 5px;
+			}
 		}
 	}
 
@@ -72,12 +141,16 @@
 		.user-settings{
 			background-color: rgba(0, 0, 0, 0.7);
 
-			.username{
-				font-size: 1.8ex;
-			}
+			div{
+				float: left;
 
-			.useremail{
-				font-size: 1.2ex;
+				.username{
+					font-size: 1.8ex;
+				}
+
+				.useremail{
+					font-size: 1.2ex;
+				}
 			}
 
 			.user-settings-button{
@@ -88,6 +161,51 @@
 		.new-message{
 			background-color: rgba(0, 0, 0, 0.4);
 
+			.new-message-container{
+				width: 100%;
+				border-radius: $radius-large;
+				background-color: rgba(255, 255, 255, 0.1);
+		
+				.content{
+					display: inline-block;
+					vertical-align: top;
+		
+					width: calc(100% - 145px - 145px - 4px);
+					height: 30px;
+					padding: 15px;
+		
+					border: none;
+					border-left: 2px solid $color-background-primary;
+					border-right: 2px solid $color-background-primary;
+					background: none;
+					color: $color-text-faded;
+				}
+				.username{
+					display: inline-block;
+					vertical-align: top;
+		
+					width: 100px;
+					height: 30px;
+					padding: 15px;
+		
+					overflow: hidden;
+					text-overflow: ellipsis;
+					font-size: 1.5ex;
+					line-height: 30px;
+				}
+				.send{
+					display: inline-block;
+					vertical-align: top;
+		
+					width: 100px;
+					height: 30px;
+					padding: 15px;
+		
+					background-image: url("/assets/expand_more.png");
+					background-position: center;
+					background-repeat: no-repeat;
+				}
+			}
 		}
 	}
 }

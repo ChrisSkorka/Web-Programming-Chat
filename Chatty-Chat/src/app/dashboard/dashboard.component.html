@@ -1,30 +1,71 @@
 <table id="content">
   <tr class="top-row">
     <td class="title">CHATTY CHAT</td>
-    <td class="top-bar" colspan="2">
+    <td class="top-bar">
       <span class="channel-name">{{channel_name}}</span>
-      <button class="sign-out" mat-stroked-button>Sign out</button>
+    </td>
+    <td class="sign-out">
+      <button mat-stroked-button>Sign out</button>
     </td>
   </tr>
   <tr class="middle-row">
     <td class="groups">
       <p class="section-header">Groups</p>
-      <div class="group" *ngFor="let group of groups; index as i" (click)="onGroupClick(i)">
+      <div class="group-contianer" *ngFor="let group of groups; index as i">
+        <div class="group" [class.expanded]="channel_list_visibilities[i]" (click)="onGroupClick(i)">
           <span>{{group.Name}}</span>
           <img src="/assets/expand_more.png">
+        </div>
+        <div class="channel-list" *ngIf="channel_list_visibilities[i]">
+          <div class="channel" *ngFor="let channel of group.Channels; index as j">
+            # {{channel.Name}}
+          </div>
+        </div>
       </div>
     </td>
-    <td class="messages">Messages</td>
-    <td class="participants" rowspan="2" style="width: 200px;">Participants</td>
+    <td class="message-list">
+      <div class="message" *ngFor="let message of messages, index as i" [style.background]="getColor(message.Color)">
+        <div class="username">
+          {{message.Username}}
+        </div>
+        <div class="content">
+          {{message.Content}}&nbsp;
+        </div>
+        <div class="datetime">
+          {{message.Datetime}}
+        </div>
+      </div>
+
+
+    </td>
+    <td class="participants" rowspan="2" style="width: 200px;">
+      <p class="section-header">Participants</p>
+      <div *ngFor="let participant of participants, index as i">
+        <span class="participant-name" [style.color]="getColor(participant.Color, 0.6, 0.8)">{{participant.Username}}</span>
+        <span class="participant-admin" *ngIf="participant.IsAdmin">Admin</span>
+      </div>
+    </td>
   </tr>
   <tr class="bottom-row">
     <td class="user-settings">
-      <p class="username">{{username}}</p>
-      <p class="useremail">{{useremail}}</p>
+      <div>
+        <p class="username">{{username}}</p>
+        <p class="useremail">{{useremail}}</p>
+      </div>
       <button class="user-settings-button" mat-mini-fab>
-        <mat-icon aria-label="User settings">/assets/settings.png</mat-icon>
+        <mat-icon aria-label="User settings" svgIcon="settings"></mat-icon>
       </button>
     </td>
-    <td class="new-message">New message</td>
+    <td class="new-message">
+
+      <div class="new-message-container">
+        <div class="username">
+          {{username}}
+        </div>
+        <input class="content" placeholder="New message" name="newmessage" [(ngModel)]="newmessage">
+        <div class="send" (click)="submitMessage()"></div>
+      </div>
+
+    </td>
   </tr>
 </table>
