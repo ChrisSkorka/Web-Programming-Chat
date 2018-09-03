@@ -8,6 +8,8 @@ import { MatButtonModule, MatProgressSpinnerModule } from '@angular/material';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconRegistry, MatIconModule } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSliderModule } from '@angular/material/slider';
 import { DomSanitizer } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 
@@ -17,6 +19,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { DeleteDialogComponent } from './delete-dialog/delete-dialog.component';
 import { NewDialogComponent } from './new-dialog/new-dialog.component';
 import { NewUserDialogComponent } from './new-user-dialog/new-user-dialog.component';
+import { ManageUsersDialogComponent } from './manage-users-dialog/manage-users-dialog.component';
 
 @NgModule({
   declarations: [
@@ -25,7 +28,8 @@ import { NewUserDialogComponent } from './new-user-dialog/new-user-dialog.compon
     DashboardComponent,
     DeleteDialogComponent,
     NewDialogComponent,
-    NewUserDialogComponent
+    NewUserDialogComponent,
+    ManageUsersDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -38,6 +42,8 @@ import { NewUserDialogComponent } from './new-user-dialog/new-user-dialog.compon
     MatGridListModule,
     MatIconModule,
     MatDialogModule,
+    MatSelectModule,
+    MatSliderModule,
     HttpClientModule,
     RouterModule.forRoot([
       {'path': '', 'component': LoginComponent},
@@ -46,7 +52,7 @@ import { NewUserDialogComponent } from './new-user-dialog/new-user-dialog.compon
   ],
   providers: [],
   bootstrap: [AppComponent],
-  entryComponents: [DeleteDialogComponent, NewDialogComponent],
+  entryComponents: [DeleteDialogComponent, NewDialogComponent, NewUserDialogComponent, ManageUsersDialogComponent],
 })
 export class AppModule {
   constructor(matIconRegistry: MatIconRegistry, domSanitizer: DomSanitizer){

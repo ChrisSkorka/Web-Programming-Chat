@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
+import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material";
 
 @Component({
   selector: 'app-new-user-dialog',
@@ -7,9 +8,88 @@ import { Component, OnInit } from '@angular/core';
 })
 export class NewUserDialogComponent implements OnInit {
 
-  constructor() { }
+  username:string = '';
+  email:string = '';
+  color:number = 0;
+  type:number = 0;
+  types:any = ["Default", "Group Admin", "Super Admin"];
+
+  constructor(private dialogRef: MatDialogRef<NewUserDialogComponent>, @Inject(MAT_DIALOG_DATA) data) {
+    
+  }
 
   ngOnInit() {
   }
 
+  cancel(){
+    this.dialogRef.close(false);
+  }
+
+  create(){
+    this.dialogRef.close({
+      username:this.username,
+      useremail:this.email,
+      color:this.color,
+      groupadmin:this.type > 0,
+      superadmin:this.type == 2,
+    });
+  }
+
+  //get rgb color string with specified hue
+  getColor(h, s = 0.50, v = 0.40, a = 1.0){
+    var r, g, b, sector, hueInSector, p, q, t;
+    
+    h %= 360;
+
+    h /= 60
+    sector = Math.floor(h);
+    hueInSector = h - sector
+
+    p = v * (1 - s)
+    q = v * (1 - s * hueInSector)
+    t = v * (1 - s * (1 - hueInSector))
+
+    switch(sector) {
+      case 0:
+        r = v;
+        g = t;
+        b = p;
+        break;
+    
+      case 1:
+        r = q;
+        g = v;
+        b = p;
+        break;
+    
+      case 2:
+        r = p;
+        g = v;
+        b = t;
+        break;
+    
+      case 3:
+        r = p;
+        g = q;
+        b = v;
+        break;
+    
+      case 4:
+        r = t;
+        g = p;
+        b = v;
+        break;
+      
+      case 5:
+      default:
+        r = v;
+        g = p;
+        b = q;
+    }
+
+    r = Math.floor(r * 255)
+    g = Math.floor(g * 255)
+    b = Math.floor(b * 255)
+    return "rgba("+r+","+g+","+b+","+a+")";
+  }
 }

@@ -4,6 +4,8 @@ import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http
 import { Router } from '@angular/router';
 import { DeleteDialogComponent } from '../delete-dialog/delete-dialog.component';
 import { NewDialogComponent } from '../new-dialog/new-dialog.component';
+import { NewUserDialogComponent } from '../new-user-dialog/new-user-dialog.component';
+import { ManageUsersDialogComponent } from '../manage-users-dialog/manage-users-dialog.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -148,7 +150,39 @@ export class DashboardComponent implements OnInit {
   }
 
   onClickGroupMembers(index){
-    console.log("Edit group members " + index);
+    let dialogConfig = new MatDialogConfig();
+
+    dialogConfig.disableClose = true;
+    dialogConfig.autoFocus = true;
+
+    dialogConfig.data = {
+        type: 'Group'
+    };
+    
+    let dialogRef = this.dialog.open(ManageUsersDialogComponent, dialogConfig);
+
+    dialogRef.afterClosed().subscribe((selection) => {
+      if(selection){
+        console.log(selection);
+        return;
+        // send create new group request
+        this.http.post(
+          'http://localhost:3000/new-group', 
+          {userID:this.userID, name:selection}
+        ).subscribe(
+          (res:any) => {
+            if(res.error == null){
+              this.refreshUserData();
+            }else{
+              alert(res.error);
+            }
+          },
+          err => {
+            alert("Error connecting to the server");
+          }
+        );
+      }
+    });
   }
 
   onClickChannelMembers(i, j){
@@ -224,7 +258,37 @@ export class DashboardComponent implements OnInit {
   }
 
   onClickNewUsers(){
-    console.log("New users");
+    let dialogConfig = new MatDialogConfig();
+
+    dialogConfig.disableClose = true;
+    dialogConfig.autoFocus = true;
+
+    dialogConfig.data = {
+        type: 'Group'
+    };
+    
+    let dialogRef = this.dialog.open(NewUserDialogComponent, dialogConfig);
+
+    dialogRef.afterClosed().subscribe((selection) => {
+      if(selection){
+        // send create new group request
+        this.http.post(
+          'http://localhost:3000/new-user', 
+          {userID:this.userID, newUser:selection}
+        ).subscribe(
+          (res:any) => {
+            if(res.error == null){
+              this.refreshUserData();
+            }else{
+              alert(res.error);
+            }
+          },
+          err => {
+            alert("Error connecting to the server");
+          }
+        );
+      }
+    });
   }
 
   onClickDeleteUsers(){

@@ -98,6 +98,9 @@ app.post("/delete-group", (req, res) => {
 app.post("/delete-channel", (req, res) => {
     res.send(JSON.stringify(routeDeleteChannel(req)));
 });
+app.post("/new-user", (req, res) => {
+    res.send(JSON.stringify(routeNewUser(req)));
+});
 
 // proces the login route
 // either returns the user id or an error
@@ -204,6 +207,8 @@ function routeChannel(req){
 		response.error = 'User does not exist';
 	}
 
+	console.log(channel);
+
 	return response;
 }
 
@@ -240,6 +245,8 @@ function routeNewGroup(req){
 	}else{
 		response.error = 'User does not exist';
 	}
+
+	console.log(group);
 
 	return response;
 }
@@ -288,6 +295,8 @@ function routeNewChannel(req){
 	}else{
 		response.error = 'User does not exist';
 	}
+
+	console.log(channels);
 
 	return response;
 }
@@ -347,6 +356,8 @@ function routeDeleteGroup(req){
 		response.error = 'User does not exist';
 	}
 
+	console.log(groups);
+
 	return response;
 }
 
@@ -404,6 +415,52 @@ function routeDeleteChannel(req){
 	}else{
 		response.error = 'User does not exist';
 	}
+
+	console.log(channels);
+
+	return response;
+}
+
+function routeNewUser(req){
+	// template
+	let response = templateResponse();
+
+	// if user exists
+	let userID = req.body.userID;
+	if(userID in users){
+
+		let user = users[userID];
+
+		// check if user has permission
+		if(user.groupadmin || user.superadmin){
+
+			// generate group, add it to the groups and user
+			let user_details = req.body.newUser;
+			let user_id = generateID();
+			let new_user = {
+				active:true, 
+				superadmin:user_details.superadmin, 
+				groupadmin:user_details.groupadmin, 
+				username:user_details.username, 
+				useremail:user_details.useremail, 
+				color:user_details.color, 
+				groups:{}};
+			users[user_id] = new_user;
+			usernames[user_details.username] = user_id;
+
+			response.data = user_id;
+
+		// user does not have permission
+		}else{
+			response.error = 'User does not have the necessary permission';
+		}
+
+	// if user cannot be found
+	}else{
+		response.error = 'User does not exist';
+	}
+
+	console.log(users);
 
 	return response;
 }
