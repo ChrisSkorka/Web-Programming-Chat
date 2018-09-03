@@ -1,1 +1,1 @@
-{}
+{"9":{"name":"MyFirstGroup","participants":[0,8,11],"channels":[10]}}

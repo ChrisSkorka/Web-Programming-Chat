@@ -306,7 +306,9 @@ export class DashboardComponent implements OnInit {
     dialogConfig.disableClose = true;
     dialogConfig.autoFocus = true;
 
-    dialogConfig.data = {};
+    dialogConfig.data = {
+      maxType:this.superadmin ? 2: 1,
+    };
     
     let dialogRef = this.dialog.open(NewUserDialogComponent, dialogConfig);
 

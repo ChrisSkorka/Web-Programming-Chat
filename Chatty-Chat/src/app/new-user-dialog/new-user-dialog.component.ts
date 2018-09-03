@@ -12,10 +12,12 @@ export class NewUserDialogComponent implements OnInit {
   email:string = '';
   color:number = 0;
   type:number = 0;
+  maxType:number = 1;
   types:any = ["Default", "Group Admin", "Super Admin"];
 
   constructor(private dialogRef: MatDialogRef<NewUserDialogComponent>, @Inject(MAT_DIALOG_DATA) data) {
-    
+    this.maxType = data.maxType;
+    this.types = this.types.slice(0, this.maxType+1);
   }
 
   ngOnInit() {

@@ -571,7 +571,7 @@ function routeManageChannel(req){
 				// get relavant user data
 				let relevant_users = [];
 				let availableIDs = [];
-				for(let userID in group.participants){
+				for(let userID of group.participants){
 					let user = users[userID];
 					relevant_users.push({
 						userID:Number(userID),
