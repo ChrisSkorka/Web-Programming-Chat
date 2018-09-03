@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 
 @Component({
   selector: 'app-dashboard',
@@ -7,32 +9,53 @@ import { Component, OnInit } from '@angular/core';
 })
 export class DashboardComponent implements OnInit {
 
-  channel_name:string = 'Temp#Ch';
-  username:string = 'TechSupport420';
-  useremail:string = 'chris@email.com';
-  superadmin:boolean = true;
+  // app properties
   newmessage:string = '';
-  groups:any = [
-    {ID:0 ,Name:'Group 1', Participants:[1, 2, 3], GroupAdmins:[1], ShowChannels:true, Channels:[
-      {ID:123, Group:0, Name:'Channel 1', Participants:[2, 3]},
-      {ID:133, Group:0, Name:'Channel 2', Participants:[1, 3]},
-    ]}
-  ];
-  channel_list_visibilities = [true];
-  participants:any = [
-    {Username:'User1', IsAdmin:false, Color:0}, 
-    {Username:'TechSupport420', IsAdmin:true, Color:100}, 
-    {Username:'User3333333333333333', IsAdmin:false, Color:200}
-  ];
-  messages:any = [
-    {Username:this.participants[0].Username, Content:'Whats up boizzzz', Datetime:'12:34 26/08/2075', Color:this.participants[0].Color},
-    {Username:this.participants[1].Username, Content:'Whats up boizzzz', Datetime:'12:34 26/08/2075', Color:this.participants[1].Color},
-    {Username:this.participants[2].Username, Content:'Whats up boizzzz', Datetime:'12:34 26/08/2075', Color:this.participants[2].Color}
-  ];
+  editing_groups:boolean = false;
 
-  constructor() { }
+  // user properties
+  userID:number = -1;
+  username:string = '';
+  useremail:string = '';
+  color:number = 0;
+  superadmin:boolean = false;
+  groupadmin:boolean = false;
+
+  // content
+  channel_name:string = '';
+  groups:any = [];
+  channel_list_visibilities = [];
+  participants:any = [];
+  messages:any = [];
+
+  constructor(private activatedRoute:ActivatedRoute, private http: HttpClient) {
+    this.userID = activatedRoute.snapshot.params['userID'];
+  }
 
   ngOnInit() {
+
+    // get user data
+    this.http.post(
+      'http://localhost:3000/user', 
+      {userID:this.userID}
+    ).subscribe(
+      (res:any) => {
+        if(res.error == null){
+          this.superadmin = res.data.userdata.superadmin;
+          this.groupadmin = res.data.userdata.groupadmin;
+          this.username = res.data.userdata.username;
+          this.useremail = res.data.userdata.useremail;
+          this.color = res.data.userdata.color;
+          this.groups = res.data.groups;
+          this.channel_list_visibilities = new Array(this.groups.length).fill(false); // array of false's, one per group
+        }else{
+          alert(res.error);
+        }
+      },
+      err => {
+        alert("Error connecting to the server");
+      }
+    );
   }
 
   onGroupClick(index){
@@ -40,8 +63,46 @@ export class DashboardComponent implements OnInit {
     //alert(this.groups[index].showChannels);
   }
 
+  onManageGroupsClick(){
+    this.editing_groups = !this.editing_groups;
+  }
+
+  onClickDeleteGroup(index){
+    console.log("delete group " + index);
+  }
+
+  onClickDeleteChannel(i, j){
+    console.log("Delete channel " + i + " " + j);
+  }
+
+  onNewGroupClick(){
+    console.log("Create new group");
+  }
+
   submitMessage(){
     alert("Here we fucking go... " + this.newmessage);
+  }
+
+  // get data for selected channel and show
+  showChannel(channel){
+    // get channel data and messages
+    this.http.post(
+      'http://localhost:3000/channel', 
+      {userID:this.userID, channelID:channel.ID}
+    ).subscribe(
+      (res:any) => {
+        if(res.error == null){
+          this.messages = res.data.messages;
+          this.participants = res.data.participants;
+          this.channel_name = channel.name;
+        }else{
+          alert(res.error);
+        }
+      },
+      err => {
+        alert("Error connecting to the server");
+      }
+    );
   }
 
   //get rgb color string with specified hue

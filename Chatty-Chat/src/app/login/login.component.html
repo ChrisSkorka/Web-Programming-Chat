@@ -15,17 +15,10 @@
       <form class="signin-form" (submit)="signin($)">
         <mat-form-field class="text-input">
           <input matInput placeholder="Username" name="username" [(ngModel)]="username">
-          <!-- <input matInput placeholder="Username" name="username" [(ngModel)]="username" [formControl]="usernameFormControl"> -->
-          <mat-error *ngIf="invalidUsername">
-            Invalid username
-          </mat-error>
         </mat-form-field>
       
         <mat-form-field class="text-input">
           <input matInput placeholder="Password" name="password" [(ngModel)]="password">
-          <mat-error *ngIf="invalidPassword">
-            Invalid password
-          </mat-error>
         </mat-form-field>
 
         <button mat-raised-button class="center-button">Sign in</button>

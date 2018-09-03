@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-//import {FormControl, Validators} from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
 
 @Component({
   selector: 'app-login',
@@ -15,49 +16,43 @@ export class LoginComponent implements OnInit {
   invalidUsername:boolean = false;
   invalidPassword:boolean = false;
 
-  constructor(private router:Router){}
+  constructor(private router:Router, private http: HttpClient, private dialog: MatDialog){}
 
   ngOnInit() {
   }
 
   // @Output() onAuthorised: EventEmitter<null> = new EventEmitter();
 
-  autherise(){
+  autherise(userID:number){
     //this.onAuthorised.emit();
-    this.router.navigateByUrl("/dash");
+    this.router.navigate(['/dash', userID]);
   }
-
-  // usernameFormControl = new FormControl('', [
-  //   (fc: FormControl) => {this.test = fc.value;return this.invalidUsername ? {
-  //     validatePattern: {
-  //       valid: true
-  //     }
-  //   } : null;},
-  // ]);
 
   signin(event){
     //event.preventDefault();
 
+    // show loading circle
     this.signinInProcess = true;
-    if(this.username == 'TechSupport420'){
-      this.invalidUsername = false;
-      //this.usernameFormControl.setErrors('', {emitEvent: true});
-      if(this.password == 'password'){
-        this.invalidPassword = false;
 
-        this.autherise();
-
-      }else{ // password doesnt match
-        this.signinInProcess = false;
-        this.invalidPassword = true;
+    //send username to server for checking
+    this.http.post(
+      'http://localhost:3000/login', 
+      {username:this.username, password:this.password}
+    ).subscribe(
+      (res:any) => {
+        console.log(res);
+        if(res.error == null){
+          this.autherise(res.data);
+        }else{
+          alert(res.error);
+          this.signinInProcess = false;
+        }
+      },
+      err => {
+        alert("Error connecting to the server");
       }
-
-    }else{ // user doesnt exists
-      this.signinInProcess = false;
-      this.invalidUsername = true;
-      //this.usernameFormControl.setErrors('', {emitEvent: true});
-    }
-
+    );
   }
+
 
 }

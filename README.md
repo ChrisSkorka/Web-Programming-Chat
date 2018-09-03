@@ -81,10 +81,12 @@ Data structures:
   - SuperAdmin:boolean
   - Username:string
   - Email:string
-  - PasswordHash:string
   - ChatColor:int
   - Groups:{ ID:int -> ... }
     - Channels:{ ID:int }
+- Passwords:{ ID -> ... }
+  - PasswordHash:string
+  - PasswordSalt:string
 - Groups:{ ID:int -> ... }
   - Name:string
   - Participants:[int]

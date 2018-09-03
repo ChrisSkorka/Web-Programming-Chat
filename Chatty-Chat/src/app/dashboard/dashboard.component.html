@@ -1,52 +1,128 @@
 <table id="content">
   <tr class="top-row">
+
+    <!--  ------------- 
+          | X |     | |  
+          -------------  
+          |   |     | |  
+          |   |     | | 
+          |   |     | |  
+          ----------| |  
+          |   |     | |  
+          -------------  -->
     <td class="title">CHATTY CHAT</td>
+
+    <!--  ------------- 
+          |   |  X  | |  
+          -------------  
+          |   |     | |  
+          |   |     | | 
+          |   |     | |  
+          ----------| |  
+          |   |     | |  
+          -------------  -->
     <td class="top-bar">
-      <span class="channel-name">{{channel_name}}</span>
+      <span class="channel-name"># {{channel_name}}</span>
     </td>
+
+    <!--  ------------- 
+          |   |     |X|  
+          -------------  
+          |   |     | |  
+          |   |     | | 
+          |   |     | |  
+          ----------| |  
+          |   |     | |  
+          -------------  -->
     <td class="sign-out">
       <button mat-stroked-button>Sign out</button>
     </td>
   </tr>
   <tr class="middle-row">
+    
+    <!--  ------------- 
+          |   |     | |  
+          -------------  
+          |   |     | |  
+          | X |     | | 
+          |   |     | |  
+          ----------| |  
+          |   |     | |  
+          -------------  -->
     <td class="groups">
-      <p class="section-header">Groups</p>
+      <p class="section-header"><span>Groups</span><span *ngIf="groupadmin" (click)="onManageGroupsClick()">Manage</span></p>
       <div class="group-contianer" *ngFor="let group of groups; index as i">
         <div class="group" [class.expanded]="channel_list_visibilities[i]" (click)="onGroupClick(i)">
-          <span>{{group.Name}}</span>
+          <span>{{group.name}}</span>
           <img src="/assets/expand_more.png">
+          <span *ngIf="editing_groups" (click)="onClickDeleteGroup(i)">Delete</span>
         </div>
         <div class="channel-list" *ngIf="channel_list_visibilities[i]">
-          <div class="channel" *ngFor="let channel of group.Channels; index as j">
-            # {{channel.Name}}
+          <div class="channel" *ngFor="let channel of group.channels; index as j" (click)="showChannel(channel)">
+            <span># {{channel.name}}</span>
+            <span *ngIf="editing_groups" (click)="onClickDeleteChannel(i, j)">Delete</span>
           </div>
         </div>
       </div>
+      <div class="group-contianer" *ngIf="editing_groups">
+          <div class="group" (click)="onNewGroupClick()">
+            <span>Create new Group</span>
+            <img src="/assets/expand_more.png">
+          </div>
+      </div>
     </td>
+    
+    <!--  ------------- 
+          |   |     | |  
+          -------------  
+          |   |     | |  
+          |   |  X  | | 
+          |   |     | |  
+          ----------| |  
+          |   |     | |  
+          -------------  -->
     <td class="message-list">
-      <div class="message" *ngFor="let message of messages, index as i" [style.background]="getColor(message.Color)">
+      <div class="message" *ngFor="let message of messages, index as i" [style.background]="getColor(message.color)">
         <div class="username">
-          {{message.Username}}
+          {{message.username}}
         </div>
         <div class="content">
-          {{message.Content}}&nbsp;
+          {{message.content}}&nbsp;
         </div>
         <div class="datetime">
-          {{message.Datetime}}
+          {{message.datetime}}
         </div>
       </div>
-
-
     </td>
+
+    <!--  ------------- 
+          |   |     | |  
+          -------------  
+          |   |     | |  
+          |   |     |X| 
+          |   |     | |  
+          ----------| |  
+          |   |     | |  
+          -------------  -->
     <td class="participants" rowspan="2" style="width: 200px;">
       <p class="section-header">Participants</p>
       <div *ngFor="let participant of participants, index as i">
-        <span class="participant-name" [style.color]="getColor(participant.Color, 0.6, 0.8)">{{participant.Username}}</span>
-        <span class="participant-admin" *ngIf="participant.IsAdmin">Admin</span>
+        <span class="participant-name" [style.color]="getColor(participant.color, 0.6, 0.8)">{{participant.username}}</span>
+        <span class="participant-admin" *ngIf="participant.isadmin">Admin</span>
       </div>
     </td>
   </tr>
   <tr class="bottom-row">
+    
+    <!--  ------------- 
+          |   |     | |  
+          -------------  
+          |   |     | |  
+          |   |     | | 
+          |   |     | |  
+          ----------| |  
+          | X |     | |  
+          -------------  -->
     <td class="user-settings">
       <div>
         <p class="username">{{username}}</p>
@@ -56,6 +132,16 @@
         <mat-icon aria-label="User settings" svgIcon="settings"></mat-icon>
       </button>
     </td>
+    
+    <!--  ------------- 
+          |   |     | |  
+          -------------  
+          |   |     | |  
+          |   |     | | 
+          |   |     | |  
+          ----------| |  
+          |   |  X  | |  
+          -------------  -->
     <td class="new-message">
 
       <div class="new-message-container">

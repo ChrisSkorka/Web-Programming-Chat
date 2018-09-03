@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule, MatProgressSpinnerModule } from '@angular/material';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconRegistry, MatIconModule } from '@angular/material';
+import { MatDialogModule } from '@angular/material/dialog';
 import { DomSanitizer } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 
@@ -30,10 +31,11 @@ import { DashboardComponent } from './dashboard/dashboard.component';
     MatProgressSpinnerModule,
     MatGridListModule,
     MatIconModule,
+    MatDialogModule,
     HttpClientModule,
     RouterModule.forRoot([
       {'path': '', 'component': LoginComponent},
-      {'path': 'dash', 'component': DashboardComponent},
+      {'path': 'dash/:userID', 'component': DashboardComponent},
     ])
   ],
   providers: [],

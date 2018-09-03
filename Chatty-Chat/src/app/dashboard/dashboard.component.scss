@@ -46,14 +46,39 @@
 			padding: 15px;
 			vertical-align: top;
 
+			.section-header{
+				overflow: hidden;
+
+				span:first-child{
+					float: left;
+				}
+
+				span:nth-child(2){
+					float: right;
+					text-decoration: underline;
+				}
+			}
+
 			.group-contianer{
 				background-color: rgba(0, 0, 0, 0.3);
 				border-radius: $radius-small;
+				margin-bottom: 15px;
 
 				.group{
 					padding: 15px;
+					overflow: hidden;
+
+					span:first-child{
+						float: left;
+					}
 					img{
 						float: right;
+						padding-left: 10px;
+					}
+					span:nth-child(3){
+						float: right;
+						text-decoration: underline;
+						
 					}
 				}
 				.expanded{
@@ -63,9 +88,22 @@
 				}
 				.channel-list{
 					padding: 15px;
+					padding-top: 0px;
 
 					.channel{
+						margin-top: 10px;
 						padding: 5px 0px;
+						font-size: 0.8em;
+						overflow: hidden;
+	
+						span:first-child{
+							float: left;
+						}
+	
+						span:nth-child(2){
+							float: right;
+							text-decoration: underline;
+						}
 					}
 				}
 			}
@@ -104,8 +142,10 @@
 					vertical-align: top;
 
 					width: 100px;
-					padding: 20px 15px;
+					padding: 15px 15px;
 					
+					white-space: pre-line;
+					text-align: right;
 					font-size: 1.5ex;
 				}
 			}
