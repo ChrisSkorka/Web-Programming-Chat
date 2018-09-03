@@ -2,31 +2,9 @@ var bodyParser = require('body-parser');
 var express = require("express");
 var app = express();
 var http = require("http").Server(app);
+var fs = require('fs');
 
-// - Users:{ ID:int -> ... }
-//   - SuperAdmin:boolean
-//   - Username:string
-//   - Email:string
-//   - ChatColor:int
-//   - Groups:{ ID:int -> ... }
-//     - Channels:{ ID:int }
-// - Passwords:{ ID -> ... }
-//   - PasswordHash:string
-//   - PasswordSalt:string
-// - Groups:{ ID:int -> ... }
-//   - Name:string
-//   - Participants:[int]
-//   - GroupAdmins:[int]
-//   - Channels:[int]
-// - Channels:{ ID:int -> ... }
-//   - Groupd:int
-//   - Namne:string
-//   - Participants:[int]
-// - Messages:{ Channel:int -> ... }
-//   - Messages:[]
-//     - Sender:int
-//     - Content:string
-//     - Datetime:int
+
 
 var users = {
 	0:{active:true, superadmin:true, groupadmin:true, username:'admin', useremail:'super@admin.c', color:0, groups:{0:[0], 1:[2]}},
@@ -101,6 +79,24 @@ app.post("/delete-channel", (req, res) => {
 app.post("/new-user", (req, res) => {
     res.send(JSON.stringify(routeNewUser(req)));
 });
+app.post("/manage-group", (req, res) => {
+    res.send(JSON.stringify(routeManageGroup(req)));
+});
+app.post("/manage-channel", (req, res) => {
+    res.send(JSON.stringify(routeManageChannel(req)));
+});
+app.post("/manage-users", (req, res) => {
+    res.send(JSON.stringify(routeManageUsers(req)));
+});
+app.post("/update-group", (req, res) => {
+    res.send(JSON.stringify(routeUpdateGroup(req)));
+});
+app.post("/update-channel", (req, res) => {
+    res.send(JSON.stringify(routeUpdateChannel(req)));
+});
+app.post("/update-users", (req, res) => {
+    res.send(JSON.stringify(routeUpdateUsers(req)));
+});
 
 // proces the login route
 // either returns the user id or an error
@@ -133,7 +129,6 @@ function routeUser(req){
 		let group_list = [];
 
 		// get list of groups from group ID list
-		let users_groups = user.groups;
 		for(let groupID in user.groups){
 
 			// get list of channels from channel ID list
@@ -207,8 +202,6 @@ function routeChannel(req){
 		response.error = 'User does not exist';
 	}
 
-	console.log(channel);
-
 	return response;
 }
 
@@ -245,8 +238,6 @@ function routeNewGroup(req){
 	}else{
 		response.error = 'User does not exist';
 	}
-
-	console.log(group);
 
 	return response;
 }
@@ -295,8 +286,6 @@ function routeNewChannel(req){
 	}else{
 		response.error = 'User does not exist';
 	}
-
-	console.log(channels);
 
 	return response;
 }
@@ -356,8 +345,6 @@ function routeDeleteGroup(req){
 		response.error = 'User does not exist';
 	}
 
-	console.log(groups);
-
 	return response;
 }
 
@@ -416,11 +403,11 @@ function routeDeleteChannel(req){
 		response.error = 'User does not exist';
 	}
 
-	console.log(channels);
-
 	return response;
 }
 
+// process the new user route
+// checks permission, adds new user to users
 function routeNewUser(req){
 	// template
 	let response = templateResponse();
@@ -434,21 +421,29 @@ function routeNewUser(req){
 		// check if user has permission
 		if(user.groupadmin || user.superadmin){
 
-			// generate group, add it to the groups and user
+			//check if user already exists
 			let user_details = req.body.newUser;
-			let user_id = generateID();
-			let new_user = {
-				active:true, 
-				superadmin:user_details.superadmin, 
-				groupadmin:user_details.groupadmin, 
-				username:user_details.username, 
-				useremail:user_details.useremail, 
-				color:user_details.color, 
-				groups:{}};
-			users[user_id] = new_user;
-			usernames[user_details.username] = user_id;
+			if(!(user_details.username in usernames)){
 
-			response.data = user_id;
+				// generate group, add it to the groups and user
+				let user_id = generateID();
+				let new_user = {
+					active:true, 
+					superadmin:user_details.superadmin, 
+					groupadmin:user_details.groupadmin, 
+					username:user_details.username, 
+					useremail:user_details.useremail, 
+					color:user_details.color, 
+					groups:{}};
+				users[user_id] = new_user;
+				usernames[user_details.username] = user_id;
+
+				response.data = user_id;
+
+			// username already exists
+			}else{
+				response.error = 'Username already exists';
+			}
 
 		// user does not have permission
 		}else{
@@ -460,9 +455,372 @@ function routeNewUser(req){
 		response.error = 'User does not exist';
 	}
 
-	console.log(users);
+	return response;
+}
+
+// process the manage group route
+// check for permission, return list of all users, available ids and selected ids
+function routeManageGroup(req){
+	// template
+	let response = templateResponse();
+
+	// if user exists
+	let userID = req.body.userID;
+	if(userID in users){
+
+		let user = users[userID];
+
+		// check if user has permission
+		if(user.groupadmin || user.superadmin){
+
+			// check if groups exists
+			let groupID = req.body.groupID;
+			if(groupID in groups){
+
+				// get relavant user data
+				let relevant_users = [];
+				let availableIDs = [];
+				for(let userID in users){
+					let user = users[userID];
+					relevant_users.push({
+						userID:Number(userID),
+						username:user.username,
+						useremail:user.useremail,
+					});
+					availableIDs.push(userID);
+				}
+
+				// get user ids that are in the group
+				let selectedIDs = groups[groupID].participants;
+
+				response.data = {
+					availableUsers:relevant_users,
+					selectedIDs:selectedIDs,
+				};
+
+			// groups does not exist
+			}else{
+				response.error = 'Specified group does not exist';
+			}
+
+		// user does not have permission
+		}else{
+			response.error = 'User does not have the necessary permission';
+		}
+
+	// if user cannot be found
+	}else{
+		response.error = 'User does not exist';
+	}
 
 	return response;
+}
+
+// process the manage channel route
+// check for permission, return list of all users, available ids and selected ids
+function routeManageChannel(req){
+	// template
+	let response = templateResponse();
+
+	// if user exists
+	let userID = req.body.userID;
+	if(userID in users){
+
+		// check if user has permission
+		let user = users[userID];
+		if(user.groupadmin || user.superadmin){
+
+			// check if channel exists
+			let channelID = req.body.channelID;
+			if(channelID in channels){
+
+				let channel = channels[channelID];
+				let groupID = channel.group;
+				let group = groups[groupID];
+
+				// get relavant user data
+				let relevant_users = [];
+				let availableIDs = [];
+				for(let userID in group.participants){
+					let user = users[userID];
+					relevant_users.push({
+						userID:Number(userID),
+						username:user.username,
+						useremail:user.useremail,
+					});
+					availableIDs.push(userID);
+				}
+
+				// get user ids that are in the group
+				let selectedIDs = channel.participants;
+
+				response.data = {
+					availableUsers:relevant_users,
+					selectedIDs:selectedIDs,
+				};
+
+			// groups does not exist
+			}else{
+				response.error = 'Specified group does not exist';
+			}
+
+		// user does not have permission
+		}else{
+			response.error = 'User does not have the necessary permission';
+		}
+
+	// if user cannot be found
+	}else{
+		response.error = 'User does not exist';
+	}
+
+	return response;
+}
+
+// process the manage users route
+// check for permission, return list of all users
+function routeManageUsers(req){
+	// template
+	let response = templateResponse();
+
+	// if user exists
+	let userID = req.body.userID;
+	if(userID in users){
+
+		// check if user has permission
+		let user = users[userID];
+		if(user.groupadmin || user.superadmin){
+
+			// get relavant user data
+			let relevant_users = [];
+			let selectedIDs = [];
+			for(let userID in users){
+				let user = users[userID];
+				relevant_users.push({
+					userID:Number(userID),
+					username:user.username,
+					useremail:user.useremail,
+				});
+				selectedIDs.push(Number(userID));
+			}
+
+			response.data = {
+				availableUsers:relevant_users,
+				selectedIDs:selectedIDs,
+			};
+
+		// user does not have permission
+		}else{
+			response.error = 'User does not have the necessary permission';
+		}
+
+	// if user cannot be found
+	}else{
+		response.error = 'User does not exist';
+	}
+
+	return response;
+}
+
+// process the update group route
+// check for permission, add and remove users accordingly
+function routeUpdateGroup(req){
+	// template
+	let response = templateResponse();
+
+	// if user exists
+	let userID = req.body.userID;
+	if(userID in users){
+
+		// check if user has permission
+		let user = users[userID];
+		if(user.groupadmin || user.superadmin){
+
+			// check if groups exists
+			let groupID = req.body.groupID;
+			if(groupID in groups){
+
+				let group = groups[groupID];
+				let add = req.body.add;
+				let remove = req.body.remove;
+
+				// add users to groups and groups to users
+				for(let userID of add){
+					users[userID].groups[groupID] = [];
+					group.participants.push(userID);
+				}
+
+				// remove users from groups and its channels and remove channels and groups from user
+				for(let userID of remove){
+					// remove user from channels of group
+					for(let channelID of users[userID].groups[groupID]){
+						let channel = channels[channelID];
+						let index = channel.participants.indexOf(userID);
+						channel.participants.splice(index, 1);
+					}
+
+					// remove user from group
+					let index = group.participants.indexOf(userID);
+					group.participants.splice(index, 1);
+
+					// remove group and channels from user
+					delete users[userID].groups[groupID];
+				}
+			
+
+				response.data = true;
+
+			// groups does not exist
+			}else{
+				response.error = 'Specified group does not exist';
+			}
+
+		// user does not have permission
+		}else{
+			response.error = 'User does not have the necessary permission';
+		}
+
+	// if user cannot be found
+	}else{
+		response.error = 'User does not exist';
+	}
+
+	return response;
+}
+
+// process the update channel route
+// check for permission, add and remove users accordingly
+function routeUpdateChannel(req){
+	// template
+	let response = templateResponse();
+
+	// if user exists
+	let userID = req.body.userID;
+	if(userID in users){
+
+		// check if user has permission
+		let user = users[userID];
+		if(user.groupadmin || user.superadmin){
+
+			// check if groups exists
+			let channelID = req.body.channelID;
+			if(channelID in channels){
+
+				let channel = channels[channelID];
+				let groupID = channel.group;
+				let group = groups[groupID];
+				let add = req.body.add;
+				let remove = req.body.remove;
+
+				// add users to channels and add channels to users
+				for(let userID of add){
+					channel.participants.push(userID);
+					users[userID].groups[groupID].push(channelID);
+				}
+
+				// remove users from channels and remove channels from users
+				for(let userID of remove){
+					let i = channel.participants.indexOf(userID);
+					channel.participants.splice(i, 1);
+					let j = users[userID].groups[groupID].indexOf(channelID);
+					users[userID].groups[groupID].splcie(j, 1);
+				}
+
+				response.data = true;
+
+			// groups does not exist
+			}else{
+				response.error = 'Specified group does not exist';
+			}
+
+		// user does not have permission
+		}else{
+			response.error = 'User does not have the necessary permission';
+		}
+
+	// if user cannot be found
+	}else{
+		response.error = 'User does not exist';
+	}
+
+	return response;
+}
+
+// process the update users route
+// check for permission, add and remove users accordingly
+function routeUpdateUsers(req){
+	// template
+	let response = templateResponse();
+
+	// if user exists
+	let userID = req.body.userID;
+	if(userID in users){
+
+		// check if user has permission
+		let user = users[userID];
+		if(user.groupadmin || user.superadmin){
+
+			let remove = req.body.remove;
+
+			// remove users from groups, channels and existance
+			for(let userID of remove){
+				let user = users[userID];
+				let username = user.username;
+
+				// remove user from groups and channels
+				for(groupID in user.groups){
+					// remove from all channels
+					for(channelID of user.groups[groupID]){
+						let channel = channels[channelID];
+						let index = channel.participants.indexOf(userID);
+						channel.participants.splice(index, 1);
+					}
+
+					// remove from group
+					let group = groups[groupID];
+					let index = group.participants.indexOf(userID);
+					group.participants.splice(index, 1);
+				}
+
+				// remove user
+				users[userID].active = false;
+				delete usernames[username];
+			}
+		
+
+			response.data = true;
+
+		// user does not have permission
+		}else{
+			response.error = 'User does not have the necessary permission';
+		}
+
+	// if user cannot be found
+	}else{
+		response.error = 'User does not exist';
+	}
+
+	return response;
+}
+
+function saveUsers(){
+	fs.writeFile('users.txt', JSON.stringify(users));
+}
+
+function saveGroups(){
+	fs.writeFile('groups.txt', JSON.stringify(groups));
+}
+
+function saveChannels(){
+	fs.writeFile('channels', JSON.stringify(channels));
+}
+
+function saveMessages(){
+	fs.writeFile('messages.txt', JSON.stringify(messages));
+}
+
+function saveIDCounter(){
+	fs.writeFile('id_counter.txt', JSON.stringify(id));
 }
 
 // template response
@@ -475,7 +833,9 @@ function templateResponse(){
 
 // generate a new ID and return it
 function generateID(){
-	return id++;
+	id++;
+	saveIDCounter();
+	return id;
 }
 
 console.log("server starting");

@@ -4,7 +4,7 @@ import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material";
 @Component({
   selector: 'app-new-dialog',
   templateUrl: './new-dialog.component.html',
-  styleUrls: ['./new-dialog.component.css']
+  styleUrls: ['./new-dialog.component.scss']
 })
 export class NewDialogComponent implements OnInit {
 

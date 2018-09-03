@@ -1,3 +1,22 @@
-<p>
-  manage-users-dialog works!
-</p>
+<h2 mat-dialog-title>Manage Members</h2>
+
+<mat-dialog-content class="content">
+  <table>
+    <tr *ngFor="let user of availableUsers; index as i">
+      <td>
+          <mat-checkbox class="" [(ngModel)]="selection[i]"></mat-checkbox>
+      </td>
+      <td>
+        {{user.username}}
+      </td>
+      <td>
+        {{user.useremail}}
+      </td>
+    </tr>
+  </table>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+    <button class="mat-raised-button" (click)="cancel()">Cancel</button>
+    <button class="mat-raised-button mat-primary" (click)="save()">Save</button>
+</mat-dialog-actions>

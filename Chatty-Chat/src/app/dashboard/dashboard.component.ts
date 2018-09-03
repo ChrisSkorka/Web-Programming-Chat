@@ -149,44 +149,87 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  onClickGroupMembers(index){
-    let dialogConfig = new MatDialogConfig();
+  onClickGroupMembers(group){
+    // get users in and available for group
+    this.http.post(
+      'http://localhost:3000/manage-group', 
+      {userID:this.userID, groupID:group.ID}
+    ).subscribe(
+      (res:any) => {
+        if(res.error == null){
+          
+          let availableUsers = res.data.availableUsers;
+          let selectedIDs = res.data.selectedIDs;
 
-    dialogConfig.disableClose = true;
-    dialogConfig.autoFocus = true;
-
-    dialogConfig.data = {
-        type: 'Group'
-    };
-    
-    let dialogRef = this.dialog.open(ManageUsersDialogComponent, dialogConfig);
-
-    dialogRef.afterClosed().subscribe((selection) => {
-      if(selection){
-        console.log(selection);
-        return;
-        // send create new group request
-        this.http.post(
-          'http://localhost:3000/new-group', 
-          {userID:this.userID, name:selection}
-        ).subscribe(
-          (res:any) => {
-            if(res.error == null){
-              this.refreshUserData();
-            }else{
-              alert(res.error);
-            }
-          },
-          err => {
-            alert("Error connecting to the server");
-          }
-        );
+          this.manageUsers(availableUsers, selectedIDs, (add, remove)=>{
+            
+            // update server
+            this.http.post(
+              'http://localhost:3000/update-group', 
+              {userID:this.userID, groupID:group.ID, add:add, remove:remove}
+            ).subscribe(
+              (res:any) => {
+                if(res.error == null){
+                  this.refreshUserData();
+                }else{
+                  alert(res.error);
+                }
+              },
+              err => {
+                alert("Error connecting to the server");
+              }
+            );
+          });
+        }else{
+          alert(res.error);
+        }
+      },
+      err => {
+        alert("Error connecting to the server");
       }
-    });
+    );
   }
 
-  onClickChannelMembers(i, j){
-    console.log("Edit channel members " + i + " " + j);
+  onClickChannelMembers(channel){
+    // get users in and available for channel
+    this.http.post(
+      'http://localhost:3000/manage-channel', 
+      {userID:this.userID, channelID:channel.ID}
+    ).subscribe(
+      (res:any) => {
+        if(res.error == null){
+          
+          let availableUsers = res.data.availableUsers;
+          let selectedIDs = res.data.selectedIDs;
+
+          this.manageUsers(availableUsers, selectedIDs, (add, remove)=>{
+            
+            // update server
+            this.http.post(
+              'http://localhost:3000/update-channel', 
+              {userID:this.userID, channelID:channel.ID, add:add, remove:remove}
+            ).subscribe(
+              (res:any) => {
+                if(res.error == null){
+                  this.refreshUserData();
+                }else{
+                  alert(res.error);
+                }
+              },
+              err => {
+                alert("Error connecting to the server");
+              }
+            );
+          });
+
+        }else{
+          alert(res.error);
+        }
+      },
+      err => {
+        alert("Error connecting to the server");
+      }
+    );
   }
 
   onClickNewGroup(){
@@ -263,9 +306,7 @@ export class DashboardComponent implements OnInit {
     dialogConfig.disableClose = true;
     dialogConfig.autoFocus = true;
 
-    dialogConfig.data = {
-        type: 'Group'
-    };
+    dialogConfig.data = {};
     
     let dialogRef = this.dialog.open(NewUserDialogComponent, dialogConfig);
 
@@ -292,7 +333,67 @@ export class DashboardComponent implements OnInit {
   }
 
   onClickDeleteUsers(){
-    console.log("Delete users");
+    // get users in and available for channel
+    this.http.post(
+      'http://localhost:3000/manage-users', 
+      {userID:this.userID}
+    ).subscribe(
+      (res:any) => {
+        if(res.error == null){
+          
+          let availableUsers = res.data.availableUsers;
+          let selectedIDs = res.data.selectedIDs;
+
+          this.manageUsers(availableUsers, selectedIDs, (add, remove)=>{
+            
+            // update server
+            this.http.post(
+              'http://localhost:3000/update-users', 
+              {userID:this.userID, add:add, remove:remove}
+            ).subscribe(
+              (res:any) => {
+                if(res.error == null){
+                  this.refreshUserData();
+                }else{
+                  alert(res.error);
+                }
+              },
+              err => {
+                alert("Error connecting to the server");
+              }
+            );
+          });
+
+        }else{
+          alert(res.error);
+        }
+      },
+      err => {
+        alert("Error connecting to the server");
+      }
+    );
+  }
+
+  manageUsers(availableUsers:any, selectedIDs:any, update:(add:any, remove:any)=>any){
+
+    let dialogConfig = new MatDialogConfig();
+
+    dialogConfig.disableClose = true;
+    dialogConfig.autoFocus = true;
+
+    dialogConfig.data = {
+      availableUsers:availableUsers,
+      selectedIDs:selectedIDs,
+    };
+    
+    let dialogRef = this.dialog.open(ManageUsersDialogComponent, dialogConfig);
+
+    dialogRef.afterClosed().subscribe((selection) => {
+      if(selection){
+        // get selection data into difference
+        update(selection.add, selection.remove);
+      }
+    });
   }
 
   submitMessage(){

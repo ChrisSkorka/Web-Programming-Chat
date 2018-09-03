@@ -56,13 +56,13 @@
           <span>{{group.name}}</span>
           <img class="clickable" src="/assets/expand_more.png">
           <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteGroup(group)">Delete</span>
-          <span class="clickable" *ngIf="editing_groups" (click)="onClickGroupMembers(i)">Members</span>
+          <span class="clickable" *ngIf="editing_groups" (click)="onClickGroupMembers(group)">Members</span>
         </div>
         <div class="channel-list" *ngIf="channel_list_visibilities[i]">
           <div class="channel clickable" *ngFor="let channel of group.channels; index as j" (click)="onClickChannel(channel)">
             <span># {{channel.name}}</span>
             <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteChannel(channel)">Delete</span>
-            <span class="clickable" *ngIf="editing_groups" (click)="onClickChannelMembers(i, j)">Members</span>
+            <span class="clickable" *ngIf="editing_groups" (click)="onClickChannelMembers(channel)">Members</span>
           </div>
           <div class="channel clickable" *ngIf="editing_groups" (click)="onClickNewChannel(group)">
             <span class="clickable">+ Create new channel</span>

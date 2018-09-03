@@ -1,8 +1,12 @@
+// standard imports
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule }   from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClientModule } from '@angular/common/http';
+
+// material imports
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule, MatProgressSpinnerModule } from '@angular/material';
 import { MatGridListModule } from '@angular/material/grid-list';
@@ -10,9 +14,10 @@ import { MatIconRegistry, MatIconModule } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { DomSanitizer } from '@angular/platform-browser';
-import { HttpClientModule } from '@angular/common/http';
 
+// custom components
 import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -44,6 +49,7 @@ import { ManageUsersDialogComponent } from './manage-users-dialog/manage-users-d
     MatDialogModule,
     MatSelectModule,
     MatSliderModule,
+    MatCheckboxModule,
     HttpClientModule,
     RouterModule.forRoot([
       {'path': '', 'component': LoginComponent},
