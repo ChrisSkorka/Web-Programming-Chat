@@ -4,99 +4,121 @@ var app = express();
 var http = require("http").Server(app);
 var fs = require('fs');
 
+var fNameUsers = 'users.txt';
+var fNameUsernames = 'usernames.txt';
+var fNameGroups = 'groups.txt';
+var fNameChannels = 'channels.txt';
+var fNameMessages = 'messages.txt';
+var fNameId = 'id.txt';
 
+var users;
+var usernames;
+var groups;
+var channels;
+var messages;
+var id;
 
-var users = {
-	0:{active:true, superadmin:true, groupadmin:true, username:'admin', useremail:'super@admin.c', color:0, groups:{0:[0], 1:[2]}},
-	1:{active:true, superadmin:false, groupadmin:true, username:'gadmin', useremail:'group@admin.c', color:100, groups:{0:[0, 1]}},
-	2:{active:true, superadmin:false, groupadmin:false, username:'user', useremail:'loser@user.c', color:200, groups:{0:[0, 1], 1:[2]}},
-};
+setupFS();
+startServer();
 
-var usernames = {
-	'admin':0,
-	'gadmin':1,
-	'user':2,
-};
+function setupFS(){
+	try{
+		fs.accessSync(fNameUsers, fs.constants.F_OK);
+		fs.accessSync(fNameUsernames, fs.constants.F_OK);
+		fs.accessSync(fNameGroups, fs.constants.F_OK);
+		fs.accessSync(fNameChannels, fs.constants.F_OK);
+		fs.accessSync(fNameMessages, fs.constants.F_OK);
+		fs.accessSync(fNameId, fs.constants.F_OK);
 
-var groups = {
-	0:{name:'WeAreNumberOne', participants:[0, 1, 2], channels:[0, 1]},
-	1:{name:'WeAreNumberTwo', participants:[0, 2], channels:[2]},
-};
+		// if all files are OK, read them
+		users = JSON.parse(fs.readFileSync(fNameUsers));
+		usernames = JSON.parse(fs.readFileSync(fNameUsernames));
+		groups = JSON.parse(fs.readFileSync(fNameGroups));
+		channels = JSON.parse(fs.readFileSync(fNameChannels));
+		messages = JSON.parse(fs.readFileSync(fNameMessages));
+		id = JSON.parse(fs.readFileSync(fNameId));
 
-var channels = {
-	0:{group:0, name:'NowListenClosely', participants:[0, 1, 2]},
-	1:{group:0, name:'HeresALittleLesson', participants:[1, 2]},
-	2:{group:1, name:'BeepTest', participants:[0, 2]},
-};
+		console.log("Red files and restored state");
 
-var messages = {
-	0:[
-		{sender:0, content:'Now Listen Closely', datetime:0},
-		{sender:2, content:'Heres a little lesson', datetime:0},
-	],
-	1:[
+	}catch(error){
+		// one or more files do not exist or are inacccessible
+		// create blank state
+		initState();
+		console.log("Files unavailable! new state created");
+	}
+}
 
-	],
-	2:[
-		{sender:1, content:'Whats the beep test?', datetime:0},
-		{sender:2, content:'The 20m multistage fitness test (MSFT) is a commonly used maximal running aerobic fitness test. It is also known as the 20 meter shuttle run test, beep or bleep test among other names.', datetime:0},
-	],
-};
+function initState(){
+	users = {
+		0:{active:true, superadmin:true, groupadmin:true, username:'superadmin', useremail:'super@admin.com', color:0, groups:{}},
+	};
+	usernames = {'superadmin':0,};
+	groups = {};
+	channels = {};
+	messages = {};
+	id = 1;
 
-var id = 10;
+	saveUsers();
+	saveGroups();
+	saveChannels();
+	saveMessages();
+	saveIDCounter();
+}
 
-app.use(bodyParser.json())
-app.use(express.static(__dirname + "./dest"));
-app.use(function(req, res, next) {
-	res.header("Access-Control-Allow-Origin", "*");
-	res.header("Access-Control-Allow-Headers", "*");
-	next();
-  });
-// app.get("/account", function (req, res) {
-//     res.sendFile(__dirname + "/www/account.html");
-// });
-app.post("/login", (req, res) => {
-    res.send(JSON.stringify(routeLogin(req)));
-});
-app.post("/user", (req, res) => {
-    res.send(JSON.stringify(routeUser(req)));
-});
-app.post("/channel", (req, res) => {
-    res.send(JSON.stringify(routeChannel(req)));
-});
-app.post("/new-group", (req, res) => {
-    res.send(JSON.stringify(routeNewGroup(req)));
-});
-app.post("/new-channel", (req, res) => {
-    res.send(JSON.stringify(routeNewChannel(req)));
-});
-app.post("/delete-group", (req, res) => {
-    res.send(JSON.stringify(routeDeleteGroup(req)));
-});
-app.post("/delete-channel", (req, res) => {
-    res.send(JSON.stringify(routeDeleteChannel(req)));
-});
-app.post("/new-user", (req, res) => {
-    res.send(JSON.stringify(routeNewUser(req)));
-});
-app.post("/manage-group", (req, res) => {
-    res.send(JSON.stringify(routeManageGroup(req)));
-});
-app.post("/manage-channel", (req, res) => {
-    res.send(JSON.stringify(routeManageChannel(req)));
-});
-app.post("/manage-users", (req, res) => {
-    res.send(JSON.stringify(routeManageUsers(req)));
-});
-app.post("/update-group", (req, res) => {
-    res.send(JSON.stringify(routeUpdateGroup(req)));
-});
-app.post("/update-channel", (req, res) => {
-    res.send(JSON.stringify(routeUpdateChannel(req)));
-});
-app.post("/update-users", (req, res) => {
-    res.send(JSON.stringify(routeUpdateUsers(req)));
-});
+function startServer(){
+	app.use(bodyParser.json())
+	app.use(express.static(__dirname + "./dest"));
+	app.use(function(req, res, next) {
+		res.header("Access-Control-Allow-Origin", "*");
+		res.header("Access-Control-Allow-Headers", "*");
+		next();
+	});
+	app.post("/login", (req, res) => {
+		res.send(JSON.stringify(routeLogin(req)));
+	});
+	app.post("/user", (req, res) => {
+		res.send(JSON.stringify(routeUser(req)));
+	});
+	app.post("/channel", (req, res) => {
+		res.send(JSON.stringify(routeChannel(req)));
+	});
+	app.post("/new-group", (req, res) => {
+		res.send(JSON.stringify(routeNewGroup(req)));
+	});
+	app.post("/new-channel", (req, res) => {
+		res.send(JSON.stringify(routeNewChannel(req)));
+	});
+	app.post("/delete-group", (req, res) => {
+		res.send(JSON.stringify(routeDeleteGroup(req)));
+	});
+	app.post("/delete-channel", (req, res) => {
+		res.send(JSON.stringify(routeDeleteChannel(req)));
+	});
+	app.post("/new-user", (req, res) => {
+		res.send(JSON.stringify(routeNewUser(req)));
+	});
+	app.post("/manage-group", (req, res) => {
+		res.send(JSON.stringify(routeManageGroup(req)));
+	});
+	app.post("/manage-channel", (req, res) => {
+		res.send(JSON.stringify(routeManageChannel(req)));
+	});
+	app.post("/manage-users", (req, res) => {
+		res.send(JSON.stringify(routeManageUsers(req)));
+	});
+	app.post("/update-group", (req, res) => {
+		res.send(JSON.stringify(routeUpdateGroup(req)));
+	});
+	app.post("/update-channel", (req, res) => {
+		res.send(JSON.stringify(routeUpdateChannel(req)));
+	});
+	app.post("/update-users", (req, res) => {
+		res.send(JSON.stringify(routeUpdateUsers(req)));
+	});
+	
+	console.log("server starting");
+	http.listen(3000);
+}
 
 // proces the login route
 // either returns the user id or an error
@@ -239,6 +261,7 @@ function routeNewGroup(req){
 		response.error = 'User does not exist';
 	}
 
+	saveUserGroupChannelState();
 	return response;
 }
 
@@ -287,6 +310,8 @@ function routeNewChannel(req){
 		response.error = 'User does not exist';
 	}
 
+	saveUserGroupChannelState();
+	saveMessages();
 	return response;
 }
 
@@ -345,6 +370,8 @@ function routeDeleteGroup(req){
 		response.error = 'User does not exist';
 	}
 
+	saveUserGroupChannelState();
+	saveMessages();
 	return response;
 }
 
@@ -403,6 +430,8 @@ function routeDeleteChannel(req){
 		response.error = 'User does not exist';
 	}
 
+	saveUserGroupChannelState();
+	saveMessages();
 	return response;
 }
 
@@ -455,6 +484,7 @@ function routeNewUser(req){
 		response.error = 'User does not exist';
 	}
 
+	saveUserGroupChannelState();
 	return response;
 }
 
@@ -685,6 +715,8 @@ function routeUpdateGroup(req){
 		response.error = 'User does not exist';
 	}
 
+	saveUserGroupChannelState();
+	saveMessages();
 	return response;
 }
 
@@ -743,6 +775,8 @@ function routeUpdateChannel(req){
 		response.error = 'User does not exist';
 	}
 
+	saveUserGroupChannelState();
+	saveMessages();
 	return response;
 }
 
@@ -800,27 +834,36 @@ function routeUpdateUsers(req){
 		response.error = 'User does not exist';
 	}
 
+	saveUserGroupChannelState();
+	saveMessages();
 	return response;
 }
 
 function saveUsers(){
-	fs.writeFile('users.txt', JSON.stringify(users));
+	fs.writeFile(fNameUsers, JSON.stringify(users));
+	fs.writeFile(fNameUsernames, JSON.stringify(usernames));
 }
 
 function saveGroups(){
-	fs.writeFile('groups.txt', JSON.stringify(groups));
+	fs.writeFile(fNameGroups, JSON.stringify(groups));
 }
 
 function saveChannels(){
-	fs.writeFile('channels', JSON.stringify(channels));
+	fs.writeFile(fNameChannels, JSON.stringify(channels));
 }
 
 function saveMessages(){
-	fs.writeFile('messages.txt', JSON.stringify(messages));
+	fs.writeFile(fNameMessages, JSON.stringify(messages));
 }
 
 function saveIDCounter(){
-	fs.writeFile('id_counter.txt', JSON.stringify(id));
+	fs.writeFile(fNameId, JSON.stringify(id));
+}
+
+function saveUserGroupChannelState(){
+	saveUsers();
+	saveGroups();
+	saveChannels();
 }
 
 // template response
@@ -837,6 +880,3 @@ function generateID(){
 	saveIDCounter();
 	return id;
 }
-
-console.log("server starting");
-http.listen(3000);
