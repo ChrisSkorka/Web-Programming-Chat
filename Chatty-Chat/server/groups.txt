@@ -1,1 +1,1 @@
-{"9":{"name":"MyFirstGroup","participants":[0,8,11],"channels":[10,13]},"12":{"name":"FriendGroups","participants":[8],"channels":[14]}}
+{"2":{"name":"MyGroup","participants":[0,6,10],"channels":[3]},"4":{"name":"Meine Gruppe","participants":[0],"channels":[5]}}
