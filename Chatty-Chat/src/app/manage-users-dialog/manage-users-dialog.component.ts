@@ -13,6 +13,9 @@ export class ManageUsersDialogComponent implements OnInit {
   selection:any = [];
   original_selection:any = [];
 
+  addCount:number = 0;
+  removeCount:number = 0;
+
   constructor(private dialogRef: MatDialogRef<ManageUsersDialogComponent>, @Inject(MAT_DIALOG_DATA) data) {
     let availableUsers:any = data.availableUsers;
     let selectedIDs:any = data.selectedIDs;
@@ -31,13 +34,9 @@ export class ManageUsersDialogComponent implements OnInit {
 
   ngOnInit() {}
 
-  // cancel process
-  cancel(){
-    this.dialogRef.close(false);
-  }
-  
-  // return changes
-  save(){
+  // calculates the difference between original state and the new state
+  // it creates two lists, one of the useres added and one of the ones removed
+  getDifference(){
 
     // which useres were added and which were removed
     let difference:any = {
@@ -53,6 +52,24 @@ export class ManageUsersDialogComponent implements OnInit {
         difference.remove.push(this.availableUsers[i].userID);
     }
 
-    this.dialogRef.close(difference);
+    return difference;
+  }
+
+  // updates number of users added and removed
+  updateTally(){
+
+    let difference = this.getDifference();
+    this.addCount = difference.add.length;
+    this.removeCount = difference.remove.length;
+  }
+
+  // cancel process
+  cancel(){
+    this.dialogRef.close(false);
+  }
+  
+  // return changes
+  save(){
+    this.dialogRef.close(this.getDifference());
   }
 }

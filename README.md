@@ -3,7 +3,7 @@ Web programming assignment chat web app
 
 Description: web application for users to communicate in chennels of groups to other participants in real time.
 
-## Git
+## Git (Version Control)
 ### Layout
 - Chatty-Chat:      Chat angular and server application source code
   - src:              client source code (angular)
@@ -264,7 +264,7 @@ Routes created by the client locally in the borwser
 | /dash  | signin dashboard with all functionality dependign on user                |
 
 ### Server post routes
-Routes used to transfere reques and data bestween client and server. Note User toke is shorted to UT, UT's are use for most request to verify authority to perform an action.
+Routes used to transfere reques and data bestween client and server. Note User token is shorted to UT, UT's are used for most request to verify authority to perform actions.
 
 | Route           | Action | In | Out | 
 |-----------------|--------|----|-----|
@@ -299,7 +299,7 @@ Routes used to transfere reques and data bestween client and server. Note User t
       app
      /   \
     /     \
-login -> dashboard
+login    dashboard
         /   / \   \
        /   /   \   \
       /   /     \   \
@@ -310,3 +310,11 @@ new-   delete-  new-   manage-
 dialog dialog   user-  user-
                 dialog dialog
 ```
+
+## Compilation (Tested)
+- Client compiles on
+  - Angular CLI: 6.1.2
+  - Node: 8.11.1
+  - Angular: 6.1.1
+- Server runs on
+  - Node: 8.11.1

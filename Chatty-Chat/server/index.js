@@ -61,9 +61,9 @@ function initState(){
 
 	// default values (superadmin is default user)
 	users = {
-		0:{active:true, superadmin:true, groupadmin:true, username:'superadmin', useremail:'super@admin.com', color:0, groups:{}},
+		0:{active:true, superadmin:true, groupadmin:true, username:'super', useremail:'super@admin.com', color:0, groups:{}},
 	};
-	usernames = {'superadmin':0,};
+	usernames = {'super':0,};
 	groups = {};
 	channels = {};
 	messages = {};
@@ -83,6 +83,8 @@ function startServer(){
 	// main settings
 	app.use(bodyParser.json())
 	app.use(express.static(__dirname + "\\..\\dist\\Chatty-Chat"));
+	app.use("/login", express.static(__dirname + "\\..\\dist\\Chatty-Chat"));
+	app.use("/dash", express.static(__dirname + "\\..\\dist\\Chatty-Chat"));
 	app.use(function(req, res, next) {
 		res.header("Access-Control-Allow-Origin", "*");
 		res.header("Access-Control-Allow-Headers", "*");
@@ -98,6 +100,9 @@ function startServer(){
 	});
 	app.post("/channel", (req, res) => {
 		res.send(JSON.stringify(routeChannel(req)));
+	});
+	app.post("/send-message", (req, res) => {
+		res.send(JSON.stringify(routeSendMessage(req)));
 	});
 	app.post("/new-group", (req, res) => {
 		res.send(JSON.stringify(routeNewGroup(req)));
@@ -271,6 +276,43 @@ function routeChannel(req){
 		response.error = 'User does not exist';
 	}
 
+	return response;
+}
+
+// --- prototype ---
+// process the send message route
+function routeSendMessage(req){
+	// template
+	let response = templateResponse();
+
+	// if user exists
+	if(req.body.userID in users){
+
+		// if channel exists
+		let channelID = req.body.channelID;
+		if(channelID in channels && channelID in messages){
+
+			// add message
+			let message = {
+				sender: req.body.userID,
+				content: req.body.content,
+				datetime: req.body.datetime,
+			}
+			messages[channelID].push(message);
+
+		// channel does not exist
+		}else{
+			response.error = 'Channel does not exist';
+		}
+
+		response.data = true;
+		
+	// if user cannot be found
+	}else{
+		response.error = 'User does not exist';
+	}
+
+	saveMessages();
 	return response;
 }
 
@@ -796,7 +838,7 @@ function routeUpdateChannel(req){
 					let i = channel.participants.indexOf(userID);
 					channel.participants.splice(i, 1);
 					let j = users[userID].groups[groupID].indexOf(channelID);
-					users[userID].groups[groupID].splcie(j, 1);
+					users[userID].groups[groupID].splice(j, 1);
 				}
 
 				response.data = true;
@@ -885,50 +927,62 @@ function routeUpdateUsers(req){
 // saves users and usernames to file
 function saveUsers(){
 	fs.writeFile(fNameUsers, JSON.stringify(users), (error) => {
-		// notify of the error
-		console.log('Error writing '+fNameUsers);
-		console.log(error);
+		if(error){
+			// notify of the error
+			console.log('Error writing '+fNameUsers);
+			console.log(error);
+		}
 	});
-	fs.writeFile(fNameUsernames, JSON.stringify(usernames, (error) => {
-		// notify of the error
-		console.log('Error writing '+fNameUsernames);
-		console.log(error);
-	}));
+	fs.writeFile(fNameUsernames, JSON.stringify(usernames), (error) => {
+		if(error){
+			// notify of the error
+			console.log('Error writing '+fNameUsernames);
+			console.log(error);
+		}
+	});
 }
 
 // saves groups to file
 function saveGroups(){
 	fs.writeFile(fNameGroups, JSON.stringify(groups), (error) => {
-		// notify of the error
-		console.log('Error writing '+fNameGroups);
-		console.log(error);
+		if(error){
+			// notify of the error
+			console.log('Error writing '+fNameGroups);
+			console.log(error);
+		}
 	});
 }
 
 // saves channels to file
 function saveChannels(){
 	fs.writeFile(fNameChannels, JSON.stringify(channels), (error) => {
-		// notify of the error
-		console.log('Error writing '+fNameChannels);
-		console.log(error);
+		if(error){
+			// notify of the error
+			console.log('Error writing '+fNameChannels);
+			console.log(error);
+		}
 	});
 }
 
 // saves messages to file
 function saveMessages(){
 	fs.writeFile(fNameMessages, JSON.stringify(messages), (error) => {
-		// notify of the error
-		console.log('Error writing '+fNameMessages);
-		console.log(error);
+		if(error){
+			// notify of the error
+			console.log('Error writing '+fNameMessages);
+			console.log(error);
+		}
 	});
 }
 
 // saves id counter to file
 function saveIDCounter(){
 	fs.writeFile(fNameId, JSON.stringify(id), (error) => {
-		// notify of the error
-		console.log('Error writing '+fNameId);
-		console.log(error);
+		if(error){
+			// notify of the error
+			console.log('Error writing '+fNameId);
+			console.log(error);
+		}
 	});
 }
 

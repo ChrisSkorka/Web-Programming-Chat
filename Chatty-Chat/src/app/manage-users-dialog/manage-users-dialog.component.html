@@ -1,6 +1,12 @@
 <!-- dialog title -->
 <h2 mat-dialog-title>Manage Members</h2>
 
+<!-- total users added and removed -->
+<small>
+  Adding {{addCount}} user<span *ngIf="addCount!=1">s</span>, 
+  Removing {{removeCount}} user<span *ngIf="removeCount!=1">s</span>
+</small>
+
 <mat-dialog-content class="content">
 
   <!-- table of all users with checkboxes indicating if they are included -->
@@ -8,7 +14,7 @@
   <table>
     <tr *ngFor="let user of availableUsers; index as i">
       <td>
-          <mat-checkbox class="" [(ngModel)]="selection[i]"></mat-checkbox>
+          <mat-checkbox class="" [(ngModel)]="selection[i]" (change)="updateTally()"></mat-checkbox>
       </td>
       <td>
         {{user.username}}

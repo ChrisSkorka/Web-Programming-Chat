@@ -29,12 +29,16 @@ export class DashboardComponent implements OnInit {
   groupadmin:boolean = false;
 
   // content
-  channel_name:string = '';
-  channel_id:number = -1;
+  channelName:string = '';
+  channelID:number = -1;
   groups:any = [];
   channel_list_visibilities = [];
   participants:any = [];
   messages:any = [];
+
+  // server
+  port: string = '3000';
+  host: string = 'http://localhost:' + this.port;
 
   constructor(private router:Router, private http: HttpClient, private dialog: MatDialog) {}
 
@@ -56,7 +60,7 @@ export class DashboardComponent implements OnInit {
 
     // get channel data and messages
     this.http.post(
-      'http://localhost:3000/channel', 
+      this.host + '/channel', 
       {userID:this.userID, channelID:channel.ID}
     ).subscribe(
       (res:any) => {
@@ -65,8 +69,8 @@ export class DashboardComponent implements OnInit {
           // if secessful
           this.messages = res.data.messages;
           this.participants = res.data.participants;
-          this.channel_name = channel.name;
-          this.channel_id = channel.ID;
+          this.channelName = channel.name;
+          this.channelID = channel.ID;
         }else{
           alert(res.error);
         }
@@ -105,7 +109,7 @@ export class DashboardComponent implements OnInit {
 
         // if positive response send delete group request
         this.http.post(
-          'http://localhost:3000/delete-group', 
+          this.host + '/delete-group', 
           {userID:this.userID, groupID:group.ID}
         ).subscribe(
           (res:any) => {
@@ -148,7 +152,7 @@ export class DashboardComponent implements OnInit {
 
         // if positive response send delete channel request
         this.http.post(
-          'http://localhost:3000/delete-channel', 
+          this.host + '/delete-channel', 
           {userID:this.userID, channelID:channel.ID}
         ).subscribe(
           (res:any) => {
@@ -175,7 +179,7 @@ export class DashboardComponent implements OnInit {
     
     // get all user and users already in group
     this.http.post(
-      'http://localhost:3000/manage-group', 
+      this.host + '/manage-group', 
       {userID:this.userID, groupID:group.ID}
     ).subscribe(
       (res:any) => {
@@ -190,7 +194,7 @@ export class DashboardComponent implements OnInit {
             
             // send proposed changes to the server
             this.http.post(
-              'http://localhost:3000/update-group', 
+              this.host + '/update-group', 
               {userID:this.userID, groupID:group.ID, add:add, remove:remove}
             ).subscribe(
               (res:any) => {
@@ -221,7 +225,7 @@ export class DashboardComponent implements OnInit {
   onClickChannelMembers(channel){
     // get users from channel and group
     this.http.post(
-      'http://localhost:3000/manage-channel', 
+      this.host + '/manage-channel', 
       {userID:this.userID, channelID:channel.ID}
     ).subscribe(
       (res:any) => {
@@ -236,7 +240,7 @@ export class DashboardComponent implements OnInit {
             
             // send proposed changes to server
             this.http.post(
-              'http://localhost:3000/update-channel', 
+              this.host + '/update-channel', 
               {userID:this.userID, channelID:channel.ID, add:add, remove:remove}
             ).subscribe(
               (res:any) => {
@@ -283,7 +287,7 @@ export class DashboardComponent implements OnInit {
       if(selection){
         // send create new group request
         this.http.post(
-          'http://localhost:3000/new-group', 
+          this.host + '/new-group', 
           {userID:this.userID, name:selection}
         ).subscribe(
           (res:any) => {
@@ -327,7 +331,7 @@ export class DashboardComponent implements OnInit {
 
         // send create new channel request
         this.http.post(
-          'http://localhost:3000/new-channel', 
+          this.host + '/new-channel', 
           {userID:this.userID, groupID:group.ID, name:selection}
         ).subscribe(
           (res:any) => {
@@ -371,7 +375,7 @@ export class DashboardComponent implements OnInit {
 
         // send create new group request
         this.http.post(
-          'http://localhost:3000/new-user', 
+          this.host + '/new-user', 
           {userID:this.userID, newUser:selection}
         ).subscribe(
           (res:any) => {
@@ -395,7 +399,7 @@ export class DashboardComponent implements OnInit {
 
     // get list of all users
     this.http.post(
-      'http://localhost:3000/manage-users', 
+      this.host + '/manage-users', 
       {userID:this.userID}
     ).subscribe(
       (res:any) => {
@@ -412,7 +416,7 @@ export class DashboardComponent implements OnInit {
 
             // update server
             this.http.post(
-              'http://localhost:3000/update-users', 
+              this.host + '/update-users', 
               {userID:this.userID, add:add, remove:remove}
             ).subscribe(
               (res:any) => {
@@ -468,15 +472,54 @@ export class DashboardComponent implements OnInit {
   }
 
   // submit message prototype
-  submitMessage(){
-    alert("Here we go... " + this.newmessage);
+  submitMessage(messageInput){
+
+    // if message is empty, ignore
+    if(this.newmessage == ""){
+      return;
+    }
+
+    // if no channel selected report it
+    if(this.channelID == -1){
+      alert("No channel selected, open a channel from groups on the left");
+      return;
+    }
+
+    // if positive response send delete channel request
+    this.http.post(
+      this.host + '/send-message', 
+      {userID:this.userID, content: this.newmessage, datetime: Date.now(), channelID:this.channelID}
+    ).subscribe(
+      (res:any) => {
+        if(res.error == null){
+
+          // if sucessful, add message locally
+          let datetime = new Date(Date.now());
+
+          this.messages.push({
+            username: this.username,
+            content: this.newmessage,
+            datetime: datetime.toLocaleTimeString() + " " + datetime.toLocaleDateString(),
+            color: this.color,
+          });
+
+          // empty message input
+          this.newmessage = "";
+        }else{
+          alert(res.error);
+        }
+      },
+      err => {
+        alert("Error connecting to the server");
+      }
+    );
   }
 
   // gets userdate, group lists and channel lists and displays them
   refreshUserData(){
     // get user data request
     this.http.post(
-      'http://localhost:3000/user', 
+      this.host + '/user', 
       {userID:this.userID}
     ).subscribe(
       (res:any) => {
