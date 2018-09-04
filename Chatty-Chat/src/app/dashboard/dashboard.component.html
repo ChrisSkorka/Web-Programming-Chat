@@ -1,4 +1,6 @@
 <table id="content">
+
+  <!-- top row, title, channel title and signout button -->
   <tr class="top-row">
 
     <!--  ------------- 
@@ -10,6 +12,7 @@
           ----------| |  
           |   |     | |  
           -------------  -->
+    <!-- Title -->
     <td class="title">CHATTY CHAT</td>
 
     <!--  ------------- 
@@ -21,6 +24,7 @@
           ----------| |  
           |   |     | |  
           -------------  -->
+    <!-- Channel Name Bar -->
     <td class="top-bar">
       <span class="channel-name"># {{channel_name}}</span>
     </td>
@@ -34,6 +38,7 @@
           ----------| |  
           |   |     | |  
           -------------  -->
+    <!-- Sign out button -->
     <td class="sign-out">
       <button mat-stroked-button (click)="signout()">Sign out</button>
     </td>
@@ -49,31 +54,48 @@
           ----------| |  
           |   |     | |  
           -------------  -->
+    <!-- Groups Panel -->
     <td class="groups">
+
+      <!-- Groups title with edit button if admin -->
       <p class="section-header"><span>Groups</span><span class="clickable" *ngIf="groupadmin" (click)="onClickManageGroups()">Edit</span></p>
+      
+      <!-- Container for each group and channel list generated -->
       <div class="group-contianer" *ngFor="let group of groups; index as i">
+
+        <!-- group it self, has name, member, delete and expand -->
         <div class="group clickable" [class.expanded]="channel_list_visibilities[i]" (click)="onClickGroup(i)">
           <span>{{group.name}}</span>
           <img class="clickable" src="/assets/expand_more.png">
           <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteGroup(group)">Delete</span>
           <span class="clickable" *ngIf="editing_groups" (click)="onClickGroupMembers(group)">Members</span>
         </div>
+
+        <!-- channel list container for this group if expanded -->
         <div class="channel-list" *ngIf="channel_list_visibilities[i]">
+
+          <!-- channel item for each channel, has name, member and delete -->
           <div class="channel clickable" *ngFor="let channel of group.channels; index as j" (click)="onClickChannel(channel)">
             <span># {{channel.name}}</span>
             <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteChannel(channel)">Delete</span>
             <span class="clickable" *ngIf="editing_groups" (click)="onClickChannelMembers(channel)">Members</span>
           </div>
+
+          <!-- create new channel for this group if in edit mode -->
           <div class="channel clickable" *ngIf="editing_groups" (click)="onClickNewChannel(group)">
             <span class="clickable">+ Create new channel</span>
           </div>
+
         </div>
       </div>
+
+      <!-- Create new group if in edit mode -->
       <div class="group-contianer" *ngIf="editing_groups">
           <div class="group clickable" (click)="onClickNewGroup()">
             <span class="clickable">+ Create new group</span>
           </div>
       </div>
+      
     </td>
     
     <!--  ------------- 
@@ -85,7 +107,10 @@
           ----------| |  
           |   |     | |  
           -------------  -->
+    <!-- Message History Area -->
     <td class="message-list">
+
+      <!-- for each message, has username, content and datetim as well as background set -->
       <div class="message" *ngFor="let message of messages, index as i" [style.background]="getColor(message.color)">
         <div class="username">
           {{message.username}}
@@ -108,12 +133,19 @@
           ----------| |  
           |   |     | |  
           -------------  -->
+    <!-- Participants Panel -->
     <td class="participants" rowspan="2" style="width: 200px;">
+
+      <!-- just a header -->
       <p class="section-header">Participants</p>
+
+      <!-- participant item for each of participants of current channel -->
+      <!-- has username, is admin and color -->
       <div *ngFor="let participant of participants, index as i">
         <span class="participant-name" [style.color]="getColor(participant.color, 0.6, 0.8)">{{participant.username}}</span>
         <span class="participant-admin" *ngIf="participant.isadmin">Admin</span>
       </div>
+
     </td>
   </tr>
   <tr class="bottom-row">
@@ -127,7 +159,11 @@
           ----------| |  
           | X |     | |  
           -------------  -->
+    <!-- User Settings Area -->
     <td class="user-settings">
+      <!-- Table with user details and settings if admin -->
+      <!-- Username | New user -->
+      <!-- Email    | Remove user -->
       <table>
         <tr>
           <td class="username">{{username}}</td>
@@ -138,9 +174,7 @@
           <td class="delete-user clickable" (click)="onClickDeleteUsers()" *ngIf="superadmin">Remove User</td>
         </tr>
       </table>
-      <!-- <button class="user-settings-button" mat-mini-fab>
-        <mat-icon aria-label="User settings" svgIcon="settings"></mat-icon>
-      </button> -->
+      
     </td>
     
     <!--  ------------- 
@@ -152,8 +186,10 @@
           ----------| |  
           |   |  X  | |  
           -------------  -->
+    <!-- New Message Input -->
     <td class="new-message">
 
+      <!-- has static username, message input and send button -->
       <div class="new-message-container">
         <div class="username">
           {{username}}

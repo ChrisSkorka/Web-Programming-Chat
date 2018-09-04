@@ -888,12 +888,12 @@ function saveUsers(){
 		// notify of the error
 		console.log('Error writing '+fNameUsers);
 		console.log(error);
-	  });
+	});
 	fs.writeFile(fNameUsernames, JSON.stringify(usernames, (error) => {
 		// notify of the error
 		console.log('Error writing '+fNameUsernames);
 		console.log(error);
-	  }));
+	}));
 }
 
 // saves groups to file
@@ -902,7 +902,7 @@ function saveGroups(){
 		// notify of the error
 		console.log('Error writing '+fNameGroups);
 		console.log(error);
-	  });
+	});
 }
 
 // saves channels to file
@@ -911,7 +911,7 @@ function saveChannels(){
 		// notify of the error
 		console.log('Error writing '+fNameChannels);
 		console.log(error);
-	  });
+	});
 }
 
 // saves messages to file
@@ -920,7 +920,7 @@ function saveMessages(){
 		// notify of the error
 		console.log('Error writing '+fNameMessages);
 		console.log(error);
-	  });
+	});
 }
 
 // saves id counter to file
@@ -929,7 +929,7 @@ function saveIDCounter(){
 		// notify of the error
 		console.log('Error writing '+fNameId);
 		console.log(error);
-	  });
+	});
 }
 
 // save users, usernames, groups and channels (for convinience)

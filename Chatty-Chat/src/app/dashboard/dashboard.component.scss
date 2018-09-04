@@ -1,5 +1,6 @@
 @import '../../variables.scss';
 
+// set fullscreen and background
 #content{
 	height: 100vh;
 	width: 100vw;
@@ -7,14 +8,17 @@
 	border-collapse: collapse;
 	color: $color-text-faded;
 
+	// general rule for padding for layout
 	td{
 		padding: 15px;
 	}
 
+	// generic warning class, makes text red
 	.warning{
 		color: $color-text-warning;
 	}
 
+	// clickabe appearance, underlines and shows pointer mouse
 	.clickable{
 		cursor: pointer;
 		text-decoration: underline;
@@ -23,6 +27,7 @@
 	.top-row{
 		height: 80px;
 
+		// title of the app/page
 		.title{
 			width: 400px;
 			background-color: rgba(0, 0, 0, 0.4);
@@ -33,14 +38,19 @@
 			font-weight: bold;
 			letter-spacing: 5px;
 		}
+
+		// channel name bar
 		.top-bar{
 			background-color: rgba(0, 0, 0, 0.2);
 
+			// bold and a little larger
 			.channel-name{
 				font-size: 2ex;
 				font-weight: bold;
 			}
 		}
+
+		// float sign out button right
 		.sign-out{
 			background-color: rgba(0, 0, 0, 0.4);
 			button{
