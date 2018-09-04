@@ -82,7 +82,7 @@ function initState(){
 function startServer(){
 	// main settings
 	app.use(bodyParser.json())
-	app.use(express.static(__dirname + "./dest"));
+	app.use(express.static(__dirname + "\\..\\dist\\Chatty-Chat"));
 	app.use(function(req, res, next) {
 		res.header("Access-Control-Allow-Origin", "*");
 		res.header("Access-Control-Allow-Headers", "*");
