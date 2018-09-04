@@ -594,11 +594,15 @@ function routeManageGroup(req){
 				let availableUsers = [];
 				for(let userID in users){
 					let user = users[userID];
-					availableUsers.push({
-						userID:Number(userID),
-						username:user.username,
-						useremail:user.useremail,
-					});
+					
+					// if user is active (not deleted)
+					if(user.active){
+						availableUsers.push({
+							userID:Number(userID),
+							username:user.username,
+							useremail:user.useremail,
+						});
+					}
 				}
 
 				// get user ids that are in the group
@@ -705,12 +709,16 @@ function routeManageUsers(req){
 			let selectedIDs = [];
 			for(let userID in users){
 				let user = users[userID];
-				availableUsers.push({
-					userID:Number(userID),
-					username:user.username,
-					useremail:user.useremail,
-				});
-				selectedIDs.push(Number(userID));
+
+				// if user is active (not deleted)
+				if(user.active){
+					availableUsers.push({
+						userID:Number(userID),
+						username:user.username,
+						useremail:user.useremail,
+					});
+					selectedIDs.push(Number(userID));
+				}
 			}
 
 			response.data = {
@@ -885,6 +893,7 @@ function routeUpdateUsers(req){
 			// remove users from groups, channels and existance
 			for(let userID of remove){
 				let user = users[userID];
+				console.log(user);
 				let username = user.username;
 
 				// remove user from groups and channels
