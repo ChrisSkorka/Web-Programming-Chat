@@ -835,7 +835,7 @@ function routeUpdateUsers(req){
 
 		// check if user has permission
 		let user = users[userID];
-		if(user.groupadmin || user.superadmin){
+		if(user.superadmin){
 
 			let remove = req.body.remove;
 
