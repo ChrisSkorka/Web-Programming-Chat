@@ -12,17 +12,20 @@ export class DeleteDialogComponent implements OnInit {
   type:string = '';
 
   constructor(private dialogRef: MatDialogRef<DeleteDialogComponent>, @Inject(MAT_DIALOG_DATA) data) {
+    // show given data
     this.name = data.name;
-    this.type = data.type;
+    this.type = data.type; // Group or Channel
   }
 
   ngOnInit() {
   }
 
+  // cancel process
   cancel(){
     this.dialogRef.close(false);
   }
 
+  // confirm
   delete(){
     this.dialogRef.close(true);
   }

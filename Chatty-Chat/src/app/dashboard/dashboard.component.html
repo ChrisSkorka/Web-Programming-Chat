@@ -50,9 +50,9 @@
           |   |     | |  
           -------------  -->
     <td class="groups">
-      <p class="section-header"><span>Groups</span><span class="clickable" *ngIf="groupadmin" (click)="onManageGroupsClick()">Edit</span></p>
+      <p class="section-header"><span>Groups</span><span class="clickable" *ngIf="groupadmin" (click)="onClickManageGroups()">Edit</span></p>
       <div class="group-contianer" *ngFor="let group of groups; index as i">
-        <div class="group clickable" [class.expanded]="channel_list_visibilities[i]" (click)="onGroupClick(i)">
+        <div class="group clickable" [class.expanded]="channel_list_visibilities[i]" (click)="onClickGroup(i)">
           <span>{{group.name}}</span>
           <img class="clickable" src="/assets/expand_more.png">
           <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteGroup(group)">Delete</span>

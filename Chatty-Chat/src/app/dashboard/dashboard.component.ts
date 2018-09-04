@@ -36,22 +36,24 @@ export class DashboardComponent implements OnInit {
   participants:any = [];
   messages:any = [];
 
-  constructor(private router:Router, private http: HttpClient, private dialog: MatDialog) {
-    
-  }
+  constructor(private router:Router, private http: HttpClient, private dialog: MatDialog) {}
 
+  // get userID and download user info and group and channel lists
   ngOnInit() {
     this.userID = Number(localStorage.getItem('userID'));
     this.refreshUserData();
   }
 
-  onGroupClick(index){
+  // on group click
+  // expands or retracts channel list
+  onClickGroup(index){
     this.channel_list_visibilities[index] = !this.channel_list_visibilities[index];
-    //alert(this.groups[index].showChannels);
   }
 
-  // get data for selected channel and show
+  // on channel click
+  // get data for selected channel and show in message and participants area
   onClickChannel(channel){
+
     // get channel data and messages
     this.http.post(
       'http://localhost:3000/channel', 
@@ -59,6 +61,8 @@ export class DashboardComponent implements OnInit {
     ).subscribe(
       (res:any) => {
         if(res.error == null){
+
+          // if secessful
           this.messages = res.data.messages;
           this.participants = res.data.participants;
           this.channel_name = channel.name;
@@ -73,17 +77,21 @@ export class DashboardComponent implements OnInit {
     );
   }
 
-  onManageGroupsClick(){
+  // enable and disable group and channel editing
+  onClickManageGroups(){
     this.editing_groups = !this.editing_groups;
   }
 
+  // on group delete option click
+  // shows confirmation dialog and sends deletion request to server
   onClickDeleteGroup(group){
 
+    // material dialog
     let dialogConfig = new MatDialogConfig();
-
     dialogConfig.disableClose = true;
     dialogConfig.autoFocus = true;
 
+    // data passed to dialog
     dialogConfig.data = {
         name: group.name,
         type: 'Group',
@@ -91,15 +99,19 @@ export class DashboardComponent implements OnInit {
     
     let dialogRef = this.dialog.open(DeleteDialogComponent, dialogConfig);
 
+    //on dialog close
     dialogRef.afterClosed().subscribe((selection) => {
       if(selection){
-        // send delete group request
+
+        // if positive response send delete group request
         this.http.post(
           'http://localhost:3000/delete-group', 
           {userID:this.userID, groupID:group.ID}
         ).subscribe(
           (res:any) => {
             if(res.error == null){
+
+              // if sucsucessful, update groups and channels list
               this.refreshUserData();
             }else{
               alert(res.error);
@@ -113,13 +125,16 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // on channels delete option click
+  // shows confirmation dialog and sends deletion request to server
   onClickDeleteChannel(channel){
 
+    // material dialog
     let dialogConfig = new MatDialogConfig();
-
     dialogConfig.disableClose = true;
     dialogConfig.autoFocus = true;
 
+    // data passed to dialog
     dialogConfig.data = {
         name: channel.name,
         type: 'Channel'
@@ -127,15 +142,19 @@ export class DashboardComponent implements OnInit {
     
     let dialogRef = this.dialog.open(DeleteDialogComponent, dialogConfig);
 
+    // on dialog close send request
     dialogRef.afterClosed().subscribe((selection) => {
       if(selection){
-        // send delete channel request
+
+        // if positive response send delete channel request
         this.http.post(
           'http://localhost:3000/delete-channel', 
           {userID:this.userID, channelID:channel.ID}
         ).subscribe(
           (res:any) => {
             if(res.error == null){
+
+              // if sucessful, update groups and channels list
               this.refreshUserData();
             }else{
               alert(res.error);
@@ -149,8 +168,12 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // on group member option click
+  // gets the users that can be in the group and are in the group and allows
+  // the user to add or remove users from the group
   onClickGroupMembers(group){
-    // get users in and available for group
+    
+    // get all user and users already in group
     this.http.post(
       'http://localhost:3000/manage-group', 
       {userID:this.userID, groupID:group.ID}
@@ -158,12 +181,14 @@ export class DashboardComponent implements OnInit {
       (res:any) => {
         if(res.error == null){
           
+          // get all users and users already in group
           let availableUsers = res.data.availableUsers;
           let selectedIDs = res.data.selectedIDs;
 
+          // show manage users dialog to add and remove users from group
           this.manageUsers(availableUsers, selectedIDs, (add, remove)=>{
             
-            // update server
+            // send proposed changes to the server
             this.http.post(
               'http://localhost:3000/update-group', 
               {userID:this.userID, groupID:group.ID, add:add, remove:remove}
@@ -190,8 +215,11 @@ export class DashboardComponent implements OnInit {
     );
   }
 
+  // on channels member option click
+  // gets the users that can be in the channel and are in the channel and allows
+  // the user to add or remove users from the channel
   onClickChannelMembers(channel){
-    // get users in and available for channel
+    // get users from channel and group
     this.http.post(
       'http://localhost:3000/manage-channel', 
       {userID:this.userID, channelID:channel.ID}
@@ -199,12 +227,14 @@ export class DashboardComponent implements OnInit {
       (res:any) => {
         if(res.error == null){
           
+          // users from group and channel
           let availableUsers = res.data.availableUsers;
           let selectedIDs = res.data.selectedIDs;
 
+          // show manage users dialog 
           this.manageUsers(availableUsers, selectedIDs, (add, remove)=>{
             
-            // update server
+            // send proposed changes to server
             this.http.post(
               'http://localhost:3000/update-channel', 
               {userID:this.userID, channelID:channel.ID, add:add, remove:remove}
@@ -232,18 +262,23 @@ export class DashboardComponent implements OnInit {
     );
   }
 
+  // on create new group click
+  // show new group dialog and send new group request to server
   onClickNewGroup(){
-    let dialogConfig = new MatDialogConfig();
 
+    // material dialog
+    let dialogConfig = new MatDialogConfig();
     dialogConfig.disableClose = true;
     dialogConfig.autoFocus = true;
 
+    // type passed to dialog
     dialogConfig.data = {
         type: 'Group'
     };
     
     let dialogRef = this.dialog.open(NewDialogComponent, dialogConfig);
 
+    // on dialog close
     dialogRef.afterClosed().subscribe((selection) => {
       if(selection){
         // send create new group request
@@ -253,6 +288,8 @@ export class DashboardComponent implements OnInit {
         ).subscribe(
           (res:any) => {
             if(res.error == null){
+
+              // if sucessful update group and channel lists
               this.refreshUserData();
             }else{
               alert(res.error);
@@ -266,20 +303,28 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // on creake new chennel click
+  // shows new channel dialog and send the request with the name to the server
   onClickNewChannel(group){
-    let dialogConfig = new MatDialogConfig();
 
+    // meterial dialog
+    let dialogConfig = new MatDialogConfig();
     dialogConfig.disableClose = true;
     dialogConfig.autoFocus = true;
 
+    // passes type to dialog
     dialogConfig.data = {
         type: 'Channel'
     };
     
     let dialogRef = this.dialog.open(NewDialogComponent, dialogConfig);
 
+    // on dialog close
     dialogRef.afterClosed().subscribe((selection) => {
+
+      // if positive reponse
       if(selection){
+
         // send create new channel request
         this.http.post(
           'http://localhost:3000/new-channel', 
@@ -287,6 +332,8 @@ export class DashboardComponent implements OnInit {
         ).subscribe(
           (res:any) => {
             if(res.error == null){
+
+              // if sucessful update group and channel list
               this.refreshUserData();
             }else{
               alert(res.error);
@@ -300,20 +347,28 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // on create user click
+  // shows new user dialog and send enterd data to srever
   onClickNewUsers(){
-    let dialogConfig = new MatDialogConfig();
 
+    // material dialog
+    let dialogConfig = new MatDialogConfig();
     dialogConfig.disableClose = true;
     dialogConfig.autoFocus = true;
 
+    // data passed to dialog
+    // maximum permissions this user can create
     dialogConfig.data = {
       maxType:this.superadmin ? 2: 1,
     };
-    
     let dialogRef = this.dialog.open(NewUserDialogComponent, dialogConfig);
 
+    // on dialog close
     dialogRef.afterClosed().subscribe((selection) => {
+      
+      // if user pressed create
       if(selection){
+
         // send create new group request
         this.http.post(
           'http://localhost:3000/new-user', 
@@ -334,8 +389,11 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // on remove user click
+  // shows manage users dialog which allows user to be disselected and then deleted
   onClickDeleteUsers(){
-    // get users in and available for channel
+
+    // get list of all users
     this.http.post(
       'http://localhost:3000/manage-users', 
       {userID:this.userID}
@@ -343,11 +401,15 @@ export class DashboardComponent implements OnInit {
       (res:any) => {
         if(res.error == null){
           
+          // get user lists from response
           let availableUsers = res.data.availableUsers;
           let selectedIDs = res.data.selectedIDs;
 
+          // invoke manage users dialog with user list
           this.manageUsers(availableUsers, selectedIDs, (add, remove)=>{
             
+            // once dialog is closed the proposed changes are sent to the server
+
             // update server
             this.http.post(
               'http://localhost:3000/update-users', 
@@ -360,7 +422,7 @@ export class DashboardComponent implements OnInit {
                   alert(res.error);
                 }
               },
-              err => {
+              error => {
                 alert("Error connecting to the server");
               }
             );
@@ -376,13 +438,16 @@ export class DashboardComponent implements OnInit {
     );
   }
 
+  // shows manage users dialog with list of users (some checked) and apon completion 
+  // invokes the update callback function
   manageUsers(availableUsers:any, selectedIDs:any, update:(add:any, remove:any)=>any){
 
+    // material dialog
     let dialogConfig = new MatDialogConfig();
-
     dialogConfig.disableClose = true;
     dialogConfig.autoFocus = true;
 
+    // data passed to dialog, all users to list, users selected
     dialogConfig.data = {
       availableUsers:availableUsers,
       selectedIDs:selectedIDs,
@@ -390,34 +455,45 @@ export class DashboardComponent implements OnInit {
     
     let dialogRef = this.dialog.open(ManageUsersDialogComponent, dialogConfig);
 
+    // on dialog close
     dialogRef.afterClosed().subscribe((selection) => {
+
+      // if a new user has been submitted
       if(selection){
+
         // get selection data into difference
         update(selection.add, selection.remove);
       }
     });
   }
 
+  // submit message prototype
   submitMessage(){
-    alert("Here we fucking go... " + this.newmessage);
+    alert("Here we go... " + this.newmessage);
   }
 
   // gets userdate, group lists and channel lists and displays them
   refreshUserData(){
-    // get user data
+    // get user data request
     this.http.post(
       'http://localhost:3000/user', 
       {userID:this.userID}
     ).subscribe(
       (res:any) => {
         if(res.error == null){
+
+          // copy info
           this.superadmin = res.data.userdata.superadmin;
           this.groupadmin = res.data.userdata.groupadmin;
           this.username = res.data.userdata.username;
           this.useremail = res.data.userdata.useremail;
           this.color = res.data.userdata.color;
           this.groups = res.data.groups;
-          this.channel_list_visibilities = new Array(this.groups.length).fill(false); // array of false's, one per group
+
+          // array of false's, one per group, determine expansion of groups channel lists
+          this.channel_list_visibilities = new Array(this.groups.length).fill(false); 
+        
+        // if error, show error
         }else{
           alert(res.error);
         }
@@ -428,10 +504,10 @@ export class DashboardComponent implements OnInit {
     );
   }
 
-  // sigh out user
+  // sigh out user, remove userID stored and navigate to login
   signout(){
     localStorage.removeItem('userID');
-    this.router.navigate(['/']);
+    this.router.navigate(['login']);
   }
 
   //get rgb color string with specified hue

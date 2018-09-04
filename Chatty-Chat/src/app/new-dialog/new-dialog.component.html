@@ -1,16 +1,23 @@
+<!-- Dialof title -->
 <h2 mat-dialog-title>New {{type}}</h2>
 
 <mat-dialog-content>
+
+  <!-- promt -->
   <p>
     Enter the name:
   </p>
+  
+  <!-- name input -->
   <form class="signin-form" (submit)="signin($)">
     <mat-form-field class="text-input">
       <input matInput placeholder="Name" name="name" [(ngModel)]="name">
     </mat-form-field>
   </form>
+
 </mat-dialog-content>
 
+<!-- navigation buttons -->
 <mat-dialog-actions>
     <button class="mat-raised-button" (click)="cancel()">Cancel</button>
     <button class="mat-raised-button mat-primary" (click)="create()">Create</button>

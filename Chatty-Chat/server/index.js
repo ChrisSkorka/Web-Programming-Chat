@@ -1,9 +1,11 @@
+// imports
 var bodyParser = require('body-parser');
 var express = require("express");
 var app = express();
 var http = require("http").Server(app);
 var fs = require('fs');
 
+// filenames
 var fNameUsers = 'users.txt';
 var fNameUsernames = 'usernames.txt';
 var fNameGroups = 'groups.txt';
@@ -11,6 +13,7 @@ var fNameChannels = 'channels.txt';
 var fNameMessages = 'messages.txt';
 var fNameId = 'id.txt';
 
+// datastructures/state
 var users;
 var usernames;
 var groups;
@@ -18,11 +21,16 @@ var channels;
 var messages;
 var id;
 
+// setup files/filesystem
 setupFS();
+// start srver
 startServer();
 
+// ensure file and state is in working order
+// checks if file are accessible, if not it creates a new blank state
 function setupFS(){
 	try{
+		// check all files are accessible
 		fs.accessSync(fNameUsers, fs.constants.F_OK);
 		fs.accessSync(fNameUsernames, fs.constants.F_OK);
 		fs.accessSync(fNameGroups, fs.constants.F_OK);
@@ -38,17 +46,20 @@ function setupFS(){
 		messages = JSON.parse(fs.readFileSync(fNameMessages));
 		id = JSON.parse(fs.readFileSync(fNameId));
 
-		console.log("Red files and restored state");
+		console.log("files OK and state restored");
 
 	}catch(error){
-		// one or more files do not exist or are inacccessible
+		// one or more files do not exist or are inaccessible
 		// create blank state
 		initState();
 		console.log("Files unavailable! new state created");
 	}
 }
 
+// nitialize a new blank state
 function initState(){
+
+	// default values (superadmin is default user)
 	users = {
 		0:{active:true, superadmin:true, groupadmin:true, username:'superadmin', useremail:'super@admin.com', color:0, groups:{}},
 	};
@@ -58,6 +69,7 @@ function initState(){
 	messages = {};
 	id = 1;
 
+	// save everything
 	saveUsers();
 	saveGroups();
 	saveChannels();
@@ -65,7 +77,10 @@ function initState(){
 	saveIDCounter();
 }
 
+//start server
+// sets up server, uses and post request processing
 function startServer(){
+	// main settings
 	app.use(bodyParser.json())
 	app.use(express.static(__dirname + "./dest"));
 	app.use(function(req, res, next) {
@@ -73,6 +88,8 @@ function startServer(){
 		res.header("Access-Control-Allow-Headers", "*");
 		next();
 	});
+
+	// all routes and post requests with the corresponding function 
 	app.post("/login", (req, res) => {
 		res.send(JSON.stringify(routeLogin(req)));
 	});
@@ -116,8 +133,9 @@ function startServer(){
 		res.send(JSON.stringify(routeUpdateUsers(req)));
 	});
 	
-	console.log("server starting");
+	// begin listening for connections
 	http.listen(3000);
+	console.log("server started");
 }
 
 // proces the login route
@@ -126,7 +144,7 @@ function routeLogin(req){
 	// template
 	let response = templateResponse();
 
-	// if the user exists return the user data
+	// if the user exists return the user id
 	if(req.body.username in usernames){
 		let userID = usernames[req.body.username];
 		response.data = userID;
@@ -140,7 +158,7 @@ function routeLogin(req){
 }
 
 // process the user route
-// returns the user data for a given userID
+// returns the user data for a given userID and corresponding groups and channels
 function routeUser(req){
 	// template
 	let response = templateResponse();
@@ -148,34 +166,62 @@ function routeUser(req){
 	// if user exists
 	if(req.body.userID in users){
 		let user = users[req.body.userID];
-		let group_list = [];
+		let usersGroups = [];
 
-		// get list of groups from group ID list
-		for(let groupID in user.groups){
+		// if superuser, all groups and channels are returned
+		if(user.superadmin){
 
-			// get list of channels from channel ID list
-			let channel_list = [];
-			for(let channelID of user.groups[groupID]){
+			// add all groups and their channels
+			for(let groupID in groups){
 
-				// channel data initially needed by client
-				let channel_item = channels[channelID];
-				channel_list.push({
-					ID:channelID,
-					name:channel_item.name,
+				// add all channels
+				let usersChannels = [];
+				for(let channelID of groups[groupID].channels){
+					usersChannels.push({
+						ID:channelID,
+						name:channels[channelID].name,
+					});
+				}
+
+				// add a group object to the list
+				usersGroups.push({
+					ID:groupID,
+					name:groups[groupID].name,
+					channels:usersChannels,
 				});
 			}
 
-			// group data initially needed by client
-			let group_item = groups[groupID];
-			group_list.push({
-				ID:groupID, 
-				name:group_item.name,
-				channels:channel_list,
-			});
+		// if normal user or groupadmin return groups and channels they are in
+		}else{
+			
+			// get list of groups from group ID list
+			for(let groupID in user.groups){
+
+				// get list of channels from channel ID list
+				let usersChannels = [];
+				for(let channelID of user.groups[groupID]){
+
+					// channel data initially needed by client
+					let channel = channels[channelID];
+					usersChannels.push({
+						ID:channelID,
+						name:channel.name,
+					});
+				}
+
+				// group data initially needed by client
+				let usersGroup = groups[groupID];
+				usersGroups.push({
+					ID:groupID, 
+					name:usersGroup.name,
+					channels:usersChannels,
+				});
+			}
 		}
 
+
 		// compose response
-		response.data = {userdata:user, groups:group_list};
+		response.data = {userdata:user, groups:usersGroups};
 
 	// if user cannot be found
 	}else{
@@ -186,7 +232,7 @@ function routeUser(req){
 }
 
 // process the channel route
-// returns the channel participants and messages
+// returns the channel's participants and messages
 function routeChannel(req){
 	// template
 	let response = templateResponse();
@@ -194,22 +240,23 @@ function routeChannel(req){
 	// if user exists
 	if(req.body.userID in users){
 
-		// get participants into client compatible format
-		let formatted_participants = [];
+		// get list of all the participants
+		// get channel participants into client compatible format
+		let formattedParticipants = [];
 		for(let participant of channels[req.body.channelID].participants){
-			formatted_participants.push({
+			formattedParticipants.push({
 				username:users[participant].username,
 				color:users[participant].color,
 				isadmin:users[participant].groupadmin,
 			});
 		}
 
-		// get messages into client compatible format
-		let formatted_messages = [];
+		// get messages into client compatible format with aditional data (color, username)
+		let formattedMessages = [];
 		for(let message of messages[req.body.channelID]){
 			let datetime = new Date(message.datetime);
 			datetime = datetime.toLocaleTimeString() + " " + datetime.toLocaleDateString();
-			formatted_messages.push({
+			formattedMessages.push({
 				username:users[message.sender].username,
 				content:message.content,
 				datetime:datetime,
@@ -217,7 +264,7 @@ function routeChannel(req){
 			});
 		}
 
-		response.data = {participants:formatted_participants, messages:formatted_messages};
+		response.data = {participants:formattedParticipants, messages:formattedMessages};
 		
 	// if user cannot be found
 	}else{
@@ -228,7 +275,7 @@ function routeChannel(req){
 }
 
 // process the new group route
-// check permission, creates the group, adds the creator and returns feedback
+// check permission, creates the group, adds the creator or return error
 function routeNewGroup(req){
 	// template
 	let response = templateResponse();
@@ -237,19 +284,18 @@ function routeNewGroup(req){
 	let userID = req.body.userID;
 	if(userID in users){
 
-		let user = users[userID];
-
 		// check if user has permission
+		let user = users[userID];
 		if(user.groupadmin || user.superadmin){
 
-			// generate group, add it to the groups and user
-			let group_name = req.body.name;
-			let group_id = generateID();
-			let new_group = {name:group_name, participants:[userID], channels:[]};
-			groups[group_id] = new_group;
-			user.groups[group_id] = [];
+			// generate group, add it to the groups and user and add user to it
+			let groupName = req.body.name;
+			let groupID = generateID();
+			let newGroup = {name:groupName, participants:[userID], channels:[]};
+			groups[groupID] = newGroup;
+			user.groups[groupID] = [];
 
-			response.data = group_id;
+			response.data = groupID;
 
 		// user does not have permission
 		}else{
@@ -275,25 +321,24 @@ function routeNewChannel(req){
 	let userID = req.body.userID;
 	if(userID in users){
 
-		let user = users[userID];
-
 		// check if user has permission
+		let user = users[userID];
 		if(user.groupadmin || user.superadmin){
 
-			let groupID = req.body.groupID;
-
 			// check if groups exists
+			let groupID = req.body.groupID;
 			if(groupID in groups){
-				// generate channel, add it to the group and channels and user
-				let channel_name = req.body.name;
-				let channel_id = generateID();
-				let new_channel = {group:groupID, name:channel_name, participants:[userID]};
-				groups[groupID].channels.push(channel_id);
-				channels[channel_id] = new_channel;
-				messages[channel_id] = [];
-				user.groups[groupID].push(channel_id);
 
-				response.data = channel_id;
+				// generate channel, add it to the group and channels and user
+				let channelName = req.body.name;
+				let channelID = generateID();
+				let newChannel = {group:groupID, name:channelName, participants:[userID]};
+				groups[groupID].channels.push(channelID);
+				channels[channelID] = newChannel;
+				messages[channelID] = [];
+				user.groups[groupID].push(channelID);
+
+				response.data = channelID;
 
 			// groups does not exist
 			}else{
@@ -325,22 +370,20 @@ function routeDeleteGroup(req){
 	let userID = req.body.userID;
 	if(userID in users){
 
-		let user = users[userID];
-
 		// check if user has permission
+		let user = users[userID];
 		if(user.groupadmin || user.superadmin){
 
-			let groupID = req.body.groupID;
-
 			// check if groups exists
+			let groupID = req.body.groupID;
 			if(groupID in groups){
 
 				// delete group from groups and users
 				let group = groups[groupID];
-				let group_channels = group.channels;
+				let groupChannels = group.channels;
 				
 				// remove channel from channels and message from messages
-				for(let channelID of group_channels){
+				for(let channelID of groupChannels){
 					delete channels[channelID];
 					delete messages[channelID];
 				}
@@ -445,29 +488,27 @@ function routeNewUser(req){
 	let userID = req.body.userID;
 	if(userID in users){
 
-		let user = users[userID];
-
 		// check if user has permission
+		let user = users[userID];
 		if(user.groupadmin || user.superadmin){
 
 			//check if user already exists
-			let user_details = req.body.newUser;
-			if(!(user_details.username in usernames)){
+			let newUser = req.body.newUser;
+			if(!(newUser.username in usernames)){
 
-				// generate group, add it to the groups and user
-				let user_id = generateID();
-				let new_user = {
+				// generate user, add it to users
+				let newUserID = generateID();
+				users[newUserID] = {
 					active:true, 
-					superadmin:user_details.superadmin, 
-					groupadmin:user_details.groupadmin, 
-					username:user_details.username, 
-					useremail:user_details.useremail, 
-					color:user_details.color, 
+					superadmin:newUser.superadmin, 
+					groupadmin:newUser.groupadmin, 
+					username:newUser.username, 
+					useremail:newUser.useremail, 
+					color:newUser.color, 
 					groups:{}};
-				users[user_id] = new_user;
-				usernames[user_details.username] = user_id;
+				usernames[newUser.username] = newUserID;
 
-				response.data = user_id;
+				response.data = newUserID;
 
 			// username already exists
 			}else{
@@ -489,7 +530,7 @@ function routeNewUser(req){
 }
 
 // process the manage group route
-// check for permission, return list of all users, available ids and selected ids
+// check for permission, returns all users, user ids of group
 function routeManageGroup(req){
 	// template
 	let response = templateResponse();
@@ -507,24 +548,22 @@ function routeManageGroup(req){
 			let groupID = req.body.groupID;
 			if(groupID in groups){
 
-				// get relavant user data
-				let relevant_users = [];
-				let availableIDs = [];
+				// get all users
+				let availableUsers = [];
 				for(let userID in users){
 					let user = users[userID];
-					relevant_users.push({
+					availableUsers.push({
 						userID:Number(userID),
 						username:user.username,
 						useremail:user.useremail,
 					});
-					availableIDs.push(userID);
 				}
 
 				// get user ids that are in the group
 				let selectedIDs = groups[groupID].participants;
 
 				response.data = {
-					availableUsers:relevant_users,
+					availableUsers:availableUsers,
 					selectedIDs:selectedIDs,
 				};
 
@@ -547,7 +586,7 @@ function routeManageGroup(req){
 }
 
 // process the manage channel route
-// check for permission, return list of all users, available ids and selected ids
+// check for permission, returns users in group, user ids of channel
 function routeManageChannel(req){
 	// template
 	let response = templateResponse();
@@ -568,24 +607,22 @@ function routeManageChannel(req){
 				let groupID = channel.group;
 				let group = groups[groupID];
 
-				// get relavant user data
-				let relevant_users = [];
-				let availableIDs = [];
+				// get users from group
+				let availableUsers = [];
 				for(let userID of group.participants){
 					let user = users[userID];
-					relevant_users.push({
+					availableUsers.push({
 						userID:Number(userID),
 						username:user.username,
 						useremail:user.useremail,
 					});
-					availableIDs.push(userID);
 				}
 
-				// get user ids that are in the group
+				// get user ids from the channel
 				let selectedIDs = channel.participants;
 
 				response.data = {
-					availableUsers:relevant_users,
+					availableUsers:availableUsers,
 					selectedIDs:selectedIDs,
 				};
 
@@ -608,7 +645,7 @@ function routeManageChannel(req){
 }
 
 // process the manage users route
-// check for permission, return list of all users
+// check for permission, return all users, all user ids
 function routeManageUsers(req){
 	// template
 	let response = templateResponse();
@@ -621,12 +658,12 @@ function routeManageUsers(req){
 		let user = users[userID];
 		if(user.groupadmin || user.superadmin){
 
-			// get relavant user data
-			let relevant_users = [];
+			// get all users and all user ids
+			let availableUsers = [];
 			let selectedIDs = [];
 			for(let userID in users){
 				let user = users[userID];
-				relevant_users.push({
+				availableUsers.push({
 					userID:Number(userID),
 					username:user.username,
 					useremail:user.useremail,
@@ -635,7 +672,7 @@ function routeManageUsers(req){
 			}
 
 			response.data = {
-				availableUsers:relevant_users,
+				availableUsers:availableUsers,
 				selectedIDs:selectedIDs,
 			};
 
@@ -653,7 +690,7 @@ function routeManageUsers(req){
 }
 
 // process the update group route
-// check for permission, add and remove users accordingly
+// check for permission, adds and removes users accordingly
 function routeUpdateGroup(req){
 	// template
 	let response = templateResponse();
@@ -674,12 +711,14 @@ function routeUpdateGroup(req){
 				let add = req.body.add;
 				let remove = req.body.remove;
 
+				// user ids in add are added to the group
 				// add users to groups and groups to users
 				for(let userID of add){
 					users[userID].groups[groupID] = [];
 					group.participants.push(userID);
 				}
 
+				// user ids in remove are removed from the group
 				// remove users from groups and its channels and remove channels and groups from user
 				for(let userID of remove){
 					// remove user from channels of group
@@ -721,7 +760,7 @@ function routeUpdateGroup(req){
 }
 
 // process the update channel route
-// check for permission, add and remove users accordingly
+// check for permission, adds and removes users accordingly
 function routeUpdateChannel(req){
 	// template
 	let response = templateResponse();
@@ -744,12 +783,14 @@ function routeUpdateChannel(req){
 				let add = req.body.add;
 				let remove = req.body.remove;
 
+				// user ids in add are added to the channel
 				// add users to channels and add channels to users
 				for(let userID of add){
 					channel.participants.push(userID);
 					users[userID].groups[groupID].push(channelID);
 				}
 
+				// user ids in remove are removed from the channel
 				// remove users from channels and remove channels from users
 				for(let userID of remove){
 					let i = channel.participants.indexOf(userID);
@@ -781,7 +822,9 @@ function routeUpdateChannel(req){
 }
 
 // process the update users route
-// check for permission, add and remove users accordingly
+// check for permission, removes users accordingly
+// the user iself is deactivated to allow messages to reatain relevant links
+// once deactivated a user with the same name can be created again
 function routeUpdateUsers(req){
 	// template
 	let response = templateResponse();
@@ -796,6 +839,7 @@ function routeUpdateUsers(req){
 
 			let remove = req.body.remove;
 
+			// user ids in remove are removed from the system
 			// remove users from groups, channels and existance
 			for(let userID of remove){
 				let user = users[userID];
@@ -821,7 +865,6 @@ function routeUpdateUsers(req){
 				delete usernames[username];
 			}
 		
-
 			response.data = true;
 
 		// user does not have permission
@@ -839,34 +882,64 @@ function routeUpdateUsers(req){
 	return response;
 }
 
+// saves users and usernames to file
 function saveUsers(){
-	fs.writeFile(fNameUsers, JSON.stringify(users));
-	fs.writeFile(fNameUsernames, JSON.stringify(usernames));
+	fs.writeFile(fNameUsers, JSON.stringify(users), (error) => {
+		// notify of the error
+		console.log('Error writing '+fNameUsers);
+		console.log(error);
+	  });
+	fs.writeFile(fNameUsernames, JSON.stringify(usernames, (error) => {
+		// notify of the error
+		console.log('Error writing '+fNameUsernames);
+		console.log(error);
+	  }));
 }
 
+// saves groups to file
 function saveGroups(){
-	fs.writeFile(fNameGroups, JSON.stringify(groups));
+	fs.writeFile(fNameGroups, JSON.stringify(groups), (error) => {
+		// notify of the error
+		console.log('Error writing '+fNameGroups);
+		console.log(error);
+	  });
 }
 
+// saves channels to file
 function saveChannels(){
-	fs.writeFile(fNameChannels, JSON.stringify(channels));
+	fs.writeFile(fNameChannels, JSON.stringify(channels), (error) => {
+		// notify of the error
+		console.log('Error writing '+fNameChannels);
+		console.log(error);
+	  });
 }
 
+// saves messages to file
 function saveMessages(){
-	fs.writeFile(fNameMessages, JSON.stringify(messages));
+	fs.writeFile(fNameMessages, JSON.stringify(messages), (error) => {
+		// notify of the error
+		console.log('Error writing '+fNameMessages);
+		console.log(error);
+	  });
 }
 
+// saves id counter to file
 function saveIDCounter(){
-	fs.writeFile(fNameId, JSON.stringify(id));
+	fs.writeFile(fNameId, JSON.stringify(id), (error) => {
+		// notify of the error
+		console.log('Error writing '+fNameId);
+		console.log(error);
+	  });
 }
 
+// save users, usernames, groups and channels (for convinience)
 function saveUserGroupChannelState(){
 	saveUsers();
 	saveGroups();
 	saveChannels();
 }
 
-// template response
+// template response, data and/or error is inserted
 function templateResponse(){
 	return {
 		data: null,
@@ -874,7 +947,7 @@ function templateResponse(){
 	};
 }
 
-// generate a new ID and return it
+// generate a new unique ID and return it
 function generateID(){
 	id++;
 	saveIDCounter();

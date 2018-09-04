@@ -1,32 +1,45 @@
+<!-- Dialog title -->
 <h2 mat-dialog-title>New User</h2>
 
 <mat-dialog-content>
   <form class="signin-form" (submit)="signin($)">
+
+    <!-- Username input -->
     <mat-form-field class="text-input">
       <input matInput placeholder="Username" name="username" [(ngModel)]="username">
     </mat-form-field>
     <br>
+
+    <!-- Email input -->
     <mat-form-field class="text-input">
       <input matInput placeholder="Email" name="email" [(ngModel)]="email">
     </mat-form-field>
     <br>
+
+    <!-- User type selector -->
     <mat-form-field>
       <mat-select placeholder="User type" [(value)]="type">
         <mat-option *ngFor="let type of types; index as i" [value]="i">
           {{type}}
         </mat-option>
       </mat-select>
+
     </mat-form-field>
   </form>
-  <p [style.color]="getColor(color, 0.9, 0.8)">Color {{color}}</p>
+
+  <!-- Color selector slider -->
+  <p [style.color]="getColor(color, 0.9, 0.8)">Color (hue: {{color}} deg)</p>
   <mat-slider
     [max]="359"
     [min]="0"
     [step]="1"
-    [(ngModel)]="color">
+    [(ngModel)]="color"
+    (input)="onSliderChange($event)">
   </mat-slider>
+
 </mat-dialog-content>
 
+<!-- cancel and create buttons -->
 <mat-dialog-actions>
     <button class="mat-raised-button" (click)="cancel()">Cancel</button>
     <button class="mat-raised-button mat-primary" (click)="create()">Create</button>

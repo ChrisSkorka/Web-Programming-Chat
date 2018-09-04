@@ -51,17 +51,23 @@ import { ManageUsersDialogComponent } from './manage-users-dialog/manage-users-d
     MatSliderModule,
     MatCheckboxModule,
     HttpClientModule,
+    // client paths
     RouterModule.forRoot([
-      {'path': '', 'component': LoginComponent},
+      {'path': 'login', 'component': LoginComponent},
       {'path': 'dash', 'component': DashboardComponent},
     ])
   ],
   providers: [],
   bootstrap: [AppComponent],
-  entryComponents: [DeleteDialogComponent, NewDialogComponent, NewUserDialogComponent, ManageUsersDialogComponent],
+  entryComponents: [
+    DeleteDialogComponent, 
+    NewDialogComponent, 
+    NewUserDialogComponent, 
+    ManageUsersDialogComponent
+  ],
 })
 export class AppModule {
-  constructor(matIconRegistry: MatIconRegistry, domSanitizer: DomSanitizer){
-    matIconRegistry.addSvgIconSet(domSanitizer.bypassSecurityTrustResourceUrl('/assets/mdi.svg'));
-  }
+  // constructor(matIconRegistry: MatIconRegistry, domSanitizer: DomSanitizer){
+  //   matIconRegistry.addSvgIconSet(domSanitizer.bypassSecurityTrustResourceUrl('/assets/mdi.svg'));
+  // }
 }

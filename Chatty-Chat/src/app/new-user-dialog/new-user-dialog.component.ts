@@ -16,6 +16,7 @@ export class NewUserDialogComponent implements OnInit {
   types:any = ["Default", "Group Admin", "Super Admin"];
 
   constructor(private dialogRef: MatDialogRef<NewUserDialogComponent>, @Inject(MAT_DIALOG_DATA) data) {
+    // set max type selectable (prevent groupadmin from creating superadmin)
     this.maxType = data.maxType;
     this.types = this.types.slice(0, this.maxType+1);
   }
@@ -23,10 +24,12 @@ export class NewUserDialogComponent implements OnInit {
   ngOnInit() {
   }
 
+  // cancel the process
   cancel(){
     this.dialogRef.close(false);
   }
 
+  // return collected data
   create(){
     this.dialogRef.close({
       username:this.username,
@@ -35,6 +38,11 @@ export class NewUserDialogComponent implements OnInit {
       groupadmin:this.type > 0,
       superadmin:this.type == 2,
     });
+  }
+
+  // live color updates
+  onSliderChange(event){
+    this.color = event.value;
   }
 
   //get rgb color string with specified hue

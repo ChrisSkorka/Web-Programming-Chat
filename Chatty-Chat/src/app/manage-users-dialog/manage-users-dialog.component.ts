@@ -31,17 +31,21 @@ export class ManageUsersDialogComponent implements OnInit {
 
   ngOnInit() {}
 
+  // cancel process
   cancel(){
     this.dialogRef.close(false);
   }
   
+  // return changes
   save(){
 
+    // which useres were added and which were removed
     let difference:any = {
       add:[],
       remove:[],
     };
 
+    // check each user if it has been added or removed (or unchanged)
     for(let i:number = 0; i < this.selection.length; i++){
       if(!this.original_selection[i] && this.selection[i])
         difference.add.push(this.availableUsers[i].userID);

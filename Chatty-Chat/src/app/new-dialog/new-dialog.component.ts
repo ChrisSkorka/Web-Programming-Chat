@@ -12,16 +12,18 @@ export class NewDialogComponent implements OnInit {
   type:string = '';
 
   constructor(private dialogRef: MatDialogRef<NewDialogComponent>, @Inject(MAT_DIALOG_DATA) data) {
-    this.type = data.type;
+    this.type = data.type; // Group or Channel
   }
 
   ngOnInit() {
   }
 
+  // cancel process
   cancel(){
     this.dialogRef.close(false);
   }
 
+  // return name obtained
   create(){
     this.dialogRef.close(this.name);
   }

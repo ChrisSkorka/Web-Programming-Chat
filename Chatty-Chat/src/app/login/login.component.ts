@@ -18,19 +18,20 @@ export class LoginComponent implements OnInit {
 
   constructor(private router:Router, private http: HttpClient, private dialog: MatDialog){}
 
+  // remove userId if present
   ngOnInit() {
+    localStorage.removeItem('userID');
   }
 
-  // @Output() onAuthorised: EventEmitter<null> = new EventEmitter();
-
+  // store userID and navigate to dash
   autherise(userID:number){
-    //this.onAuthorised.emit();
     localStorage.setItem('userID', userID.toString());
     this.router.navigate(['/dash']);
   }
 
+  // signin process, sends login data to server. It recieves either a user token
+  // or error message, if user token is recieved, store it and navigate to dash
   signin(event){
-    //event.preventDefault();
 
     // show loading circle
     this.signinInProcess = true;
@@ -41,9 +42,12 @@ export class LoginComponent implements OnInit {
       {username:this.username, password:this.password}
     ).subscribe(
       (res:any) => {
-        console.log(res);
+        
+        // if no error present, signin
         if(res.error == null){
           this.autherise(res.data);
+
+        // if error present, show it
         }else{
           alert(res.error);
           this.signinInProcess = false;

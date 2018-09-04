@@ -13,24 +13,31 @@
     <!--Signin components-->
     <div id="signin" *ngIf="!signinInProcess">
       <form class="signin-form" (submit)="signin($)">
+
+        <!-- Username input -->
         <mat-form-field class="text-input">
           <input matInput placeholder="Username" name="username" [(ngModel)]="username">
         </mat-form-field>
       
+        <!-- Password input -->
         <mat-form-field class="text-input">
           <input matInput placeholder="Password" name="password" [(ngModel)]="password">
         </mat-form-field>
 
+        <!-- signin button -->
         <button mat-raised-button class="center-button">Sign in</button>
       </form>
     </div>
 
     <!--Checking sign in components-->
     <div id="loading" *ngIf="signinInProcess">
+
+      <!-- loading cirlce -->
       <div class="spinner">
         <mat-spinner diameter="30"> </mat-spinner>
       </div>
       
+      <!-- message -->
       <p class="welcome">
         Signing in
       </p>
