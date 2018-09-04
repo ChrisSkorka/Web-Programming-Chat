@@ -1,6 +1,8 @@
 # Web-Programming-Chat
 Web programming assignment chat web app
 
+Author: Christopher Skorka
+
 Description: web application for users to communicate in chennels and groups to other participants in real time.
 
 ## Git (Version Control)

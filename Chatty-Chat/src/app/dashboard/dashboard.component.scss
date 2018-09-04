@@ -65,6 +65,7 @@
 			padding: 15px;
 			vertical-align: top;
 
+			// header with edit link
 			.section-header{
 				overflow: hidden;
 
@@ -78,6 +79,7 @@
 				}
 			}
 
+			// contains a group and its channel list
 			.group-contianer{
 				background-color: rgba(0, 0, 0, 0.2);
 				border-radius: $radius-small;
@@ -87,20 +89,27 @@
 					padding: 15px;
 					overflow: hidden;
 
+					// group name
 					span:first-child{
 						float: left;
 					}
+
+					//group options
 					*:not(:first-child){
 						float: right;
 						padding: 0px 5px;
 						opacity: 0.95;
 					}
 				}
+
+				// if channel list es expanded, rotate expander image
 				.expanded{
 					img{
 						transform: rotate(180deg);
 					}
 				}
+
+				// hcannel list
 				.channel-list{
 					padding: 15px;
 					padding-top: 0px;
@@ -112,9 +121,12 @@
 						font-size: 0.8em;
 						overflow: hidden;
 	
+						// channel name
 						span:first-child{
 							float: left;
 						}
+
+						// channel option
 						*:not(:first-child){
 							float: right;
 							padding: 0px 5px;
@@ -125,8 +137,11 @@
 			}
 		}
 
+		// list of all messages from bottom going up
 		.message-list{
 			vertical-align: bottom;
+
+			// individual message
 			.message{
 				width: 100%;
 				border-radius: $radius-large;
@@ -167,6 +182,7 @@
 			}
 		}
 
+		// list of participants of the current channel, shows names and if they're admins
 		.participants{
 			width: 200px;
 			background-color: rgba(0, 0, 0, 0.1);
@@ -194,6 +210,7 @@
 	.bottom-row{
 		height: 80px;
 
+		// view user deails and if admin edit users, options are presented in a table
 		.user-settings{
 			background-color: rgba(0, 0, 0, 0.4);
 
@@ -216,15 +233,14 @@
 					text-align: right;
 				}
 			}
-
-			.user-settings-button{
-				float: right;
-			}
 		}
 
+		// new message input, structure and appearance is similar to regular messages 
+		// from message history, contains username, content/input and send button
 		.new-message{
 			background-color: rgba(0, 0, 0, 0.2);
 
+			// container of message look a like
 			.new-message-container{
 				width: 100%;
 				border-radius: $radius-large;
