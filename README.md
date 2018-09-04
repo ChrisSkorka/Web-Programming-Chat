@@ -284,4 +284,29 @@ Routes used to transfere reques and data bestween client and server. Note User t
 | /update-users   | remove people from the system                             | UT, users to be removed   | succes status |
 
 ## Angular Architecture
+### Custom Components
+| Name                | Purpose |
+|---------------------|---------|
+| login               | Login page, presents the user with a simple layout that allows them to sign in. If sign in fails approriate errors are shown |
+| dashboard           | Main page onced signed in. Allows users to message each other and admins to mannage groups, channels and users |
+| new-dialog          | Dialog that asks for a name for a new group or channel to be entered. It then returns this name to its caller. |
+| new-user-dialog     | Dialog that queries for new user details. Details include username, email, permissions and color. the details are returned to the caller. |
+| delete-dialog       | Dialog that asks for comfirmation before deleting groups and channels. |
+| manage-user-dialog  | Dialog that allows users to be added to and removed from groups, channels and the system |
 
+### Hicharchy
+```
+      app
+     /   \
+    /     \
+login -> dashboard
+        /   / \   \
+       /   /   \   \
+      /   /     \   \
+     /   |       |   \
+    /    |       |    \
+   /     |       |     \
+new-   delete-  new-   manage-
+dialog dialog   user-  user-
+                dialog dialog
+```
