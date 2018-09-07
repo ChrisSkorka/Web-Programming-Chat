@@ -1,1 +1,0 @@
-{"2":{"name":"MyGroup","participants":[0,6,10],"channels":[3]},"4":{"name":"Meine Gruppe","participants":[0],"channels":[5]}}

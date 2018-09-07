@@ -127,7 +127,7 @@ Passwords are not yet implemented.
 ```
 passwords: { userID:int => (
   passwordHash: string,
-  passwordSaltL string,
+  passwordSalt: string,
 )}
 ```
 
@@ -296,7 +296,7 @@ Routes used to transfere reques and data bestween client and server. Note User t
 | delete-dialog       | Dialog that asks for comfirmation before deleting groups and channels. |
 | manage-user-dialog  | Dialog that allows users to be added to and removed from groups, channels and the system |
 
-### Hicharchy
+### Hierarchy
 ```
       app
      /   \
