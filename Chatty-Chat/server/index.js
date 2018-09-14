@@ -4,57 +4,74 @@ var express = require("express");
 var app = express();
 var http = require("http").Server(app);
 var fs = require('fs');
-var mongo = require('mongodb');
+var mongo = require('mongodb').MongoClient;
 
-// filenames
-var fNameUsers = 'users.txt';
-var fNameUsernames = 'usernames.txt';
-var fNameGroups = 'groups.txt';
-var fNameChannels = 'channels.txt';
-var fNameMessages = 'messages.txt';
-var fNameId = 'id.txt';
+// database settings
+var url = "mongodb://localhost:27017/";
+var dbName = "chattychat";
 
-// datastructures/state
+var collectionNameUsers 	= "users";
+var collectionNameUseranmes = "usernames";
+var collectionNameGroups 	= "groups";
+var collectionNameChannels 	= "channels";
+var collectionNameMessages 	= "messages";
+var collectionNameConfig 	= "config";
+
+// database collections
+var dbServer;
 var users;
 var usernames;
 var groups;
 var channels;
 var messages;
-var id;
+var config;
 
-// setup files/filesystem
-setupFS();
+
+// connect and setup database
+setupDatabase();
+
 // start srver
 startServer();
 
-// ensure file and state is in working order
-// checks if file are accessible, if not it creates a new blank state
-function setupFS(){
-	try{
-		// check all files are accessible
-		fs.accessSync(fNameUsers, fs.constants.F_OK);
-		fs.accessSync(fNameUsernames, fs.constants.F_OK);
-		fs.accessSync(fNameGroups, fs.constants.F_OK);
-		fs.accessSync(fNameChannels, fs.constants.F_OK);
-		fs.accessSync(fNameMessages, fs.constants.F_OK);
-		fs.accessSync(fNameId, fs.constants.F_OK);
+// connect to database
+function setupDatabase(){
 
-		// if all files are OK, read them
-		users = JSON.parse(fs.readFileSync(fNameUsers));
-		usernames = JSON.parse(fs.readFileSync(fNameUsernames));
-		groups = JSON.parse(fs.readFileSync(fNameGroups));
-		channels = JSON.parse(fs.readFileSync(fNameChannels));
-		messages = JSON.parse(fs.readFileSync(fNameMessages));
-		id = JSON.parse(fs.readFileSync(fNameId));
+	mongo.connect(url, function(err, dbs){
+		if (err) throw err;
 
-		console.log("files OK and state restored");
+		// connect to database
+		dbServer = dbs
+		let db = dbServer.db(dbName);
 
-	}catch(error){
-		// one or more files do not exist or are inaccessible
-		// create blank state
-		initState();
-		console.log("Files unavailable! new state created");
-	}
+		// once connected, register on exit signal handler to close db
+		process.on('exit', 		exitHandler.bind(null, {cleanup:true}));
+		process.on('SIGINT', 	exitHandler.bind(null, {exit:true}));
+		process.on('SIGUSR1', 	exitHandler.bind(null, {exit:true}));
+		process.on('SIGUSR2', 	exitHandler.bind(null, {exit:true}));
+		process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
+
+		// get collections
+		users 		= db.collection(collectionNameUsers);
+		usernames 	= db.collection(collectionNameUseranmes);
+		groups 		= db.collection(collectionNameGroups);
+		channels 	= db.collection(collectionNameChannels);
+		messages 	= db.collection(collectionNameMessages);
+		config		= db.collection(collectionNameConfig);
+
+		// if no user exists, create the default super user
+		db.collection("users").find({}).toArray(function(err, result) {
+			if (err) throw err;
+			console.log(result);
+		});
+	})
+}
+
+// program exit handler, closes database when the program finishes, crashes or is killed
+function exitHandler(options, exitCode){
+	dbServer.close();
+	console.log("Disconnected from database");
+
+	if (options.exit) process.exit();
 }
 
 // nitialize a new blank state
