@@ -113,10 +113,10 @@ users: (
   userEmail: string,
   color: int,
   password: string,
-  groups: [ groupName: string, => { 
+  groups: { groupName: string, => ( 
     groupAdmin: boolean,
     channels: [ channelName: string ],
-  } ],
+   ) },
 )
 ```
 
@@ -125,12 +125,12 @@ users: (
 Groups contain their name and references to its participants and channels.
 
 ```
-groups: { 
+groups: ( 
   groupID: int (indexed),
   groupName: string (indexed),
   participants: { userName: string },
   channels: { channelName: string },
-}
+)
 ```
 
 #### Channels
@@ -138,12 +138,12 @@ groups: {
 Channels contain name and references to the group they belong to and its participants.
 
 ```
-channels: { 
+channels: (
   channelID: int (indexed),
   groupName: string (indexed),
   channelName: string (indexed),
   participants: { userName: string => color: int },
-}
+)
 ```
 
 #### Messsages
@@ -151,7 +151,7 @@ channels: {
 Messages are indexed by they channel ID (map from ID to message history). Each message contains a reference to the sender, the content and datetime in seconds from epoch format. Messages are stored seperate from channels to improve write and access performance. 
 
 ```
-messages: { 
+messages: (
   messageID: int (indexed),
   groupName: string (indexed),
   channelName: string (indexed),
@@ -159,7 +159,7 @@ messages: {
   color: int,
   content: string,
   datetime: int,
-}
+)
 ```
 
 ### Client representation

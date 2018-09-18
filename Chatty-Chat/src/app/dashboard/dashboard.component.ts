@@ -26,7 +26,6 @@ export class DashboardComponent implements OnInit {
   useremail:string = '';
   color:number = 0;
   superadmin:boolean = false;
-  groupadmin:boolean = false;
 
   // content
   channelName:string = '';
@@ -527,7 +526,6 @@ export class DashboardComponent implements OnInit {
 
           // copy info
           this.superadmin = res.data.userdata.superadmin;
-          this.groupadmin = res.data.userdata.groupadmin;
           this.username = res.data.userdata.username;
           this.useremail = res.data.userdata.useremail;
           this.color = res.data.userdata.color;
