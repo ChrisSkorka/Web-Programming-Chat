@@ -96,39 +96,28 @@ Key:
 - ( fiel1: type1, ... ) denotes an object with fields file1: type1, ...
 - [ name: type ]  denotes an array of elements of type type
 
-### Server representation:
+### Server and Database representation:
 In the server representation users, groups and channels are all doubly linked
 This is to improve access and writing efficiency
 
 #### Users
 ---
-User objects contain basic information and references to the groups and channels thay are part of. Usernames allows fast checks of usernames (ie does such a user exists).
+User objects contain basic information and references to the groups and channels thay are part of.
 
 ```
-users: { userID:int -> (
+users: (
+  userID: int (indexed),
   active: boolean,
-  superadmin: boolean,
-  groupadmin: boolean,
-  username: string,
-  useremail: string,
-  colo: int,
-  groups: { groupID:int => [channelID: int ]}
-)}
-```
-
-```
-usernames: { username: string => userID }
-```
-
-#### Passwords
----
-Passwords are not yet implemented.
-
-```
-passwords: { userID:int => (
-  passwordHash: string,
-  passwordSalt: string,
-)}
+  superAdmin: boolean,
+  userName: string (indexed),
+  userEmail: string,
+  color: int,
+  password: string,
+  groups: [ groupName: string, => { 
+    groupAdmin: boolean,
+    channels: [ channelName: string ],
+  } ],
+)
 ```
 
 #### Groups
@@ -136,11 +125,12 @@ passwords: { userID:int => (
 Groups contain their name and references to its participants and channels.
 
 ```
-groups: { groupID => (
-  name: string,
-  participants: [ userID:int ],
-  channels: [ channelID:int ],
-)}
+groups: { 
+  groupID: int (indexed),
+  groupName: string (indexed),
+  participants: { userName: string },
+  channels: { channelName: string },
+}
 ```
 
 #### Channels
@@ -148,11 +138,12 @@ groups: { groupID => (
 Channels contain name and references to the group they belong to and its participants.
 
 ```
-channels: { channelID:int => (
-  groupID: int,
-  name: string,
-  participants: [ userID:int ],
-)}
+channels: { 
+  channelID: int (indexed),
+  groupName: string (indexed),
+  channelName: string (indexed),
+  participants: { userName: string => color: int },
+}
 ```
 
 #### Messsages
@@ -160,20 +151,22 @@ channels: { channelID:int => (
 Messages are indexed by they channel ID (map from ID to message history). Each message contains a reference to the sender, the content and datetime in seconds from epoch format. Messages are stored seperate from channels to improve write and access performance. 
 
 ```
-messages: { channelID:int => [
-  message: (
-    userID: int,
-    content: string,
-    datetime: int,
-  ) 
-]}
+messages: { 
+  messageID: int (indexed),
+  groupName: string (indexed),
+  channelName: string (indexed),
+  userName: string,
+  color: int,
+  content: string,
+  datetime: int,
+}
 ```
 
 ### Client representation
 In the client representation objects contain the data directly rather than linking to other strscture.
 
 #### User Token
-USed to identify a signed in user
+Used to identify a signed in user
 
 ```
 userID: int
@@ -184,46 +177,26 @@ userID: int
 A single user object with basic information about the signin user as well as references to the users groups and channels.
 
 ```
-user: (
+user: {
+  userID: int (indexed),
   active: boolean,
-  superadmin: boolean,
-  groupadmin: boolean,
-  username: string,
-  useremail: string,
-  colo: int,
-  groups: { groupID:int => [ channelID: int ]}
-)
-```
-
-#### User's Groups and Channels
-List of groups the user is part of. Each group has lists of channels that the user is part of. This is used to build the group and channel list.
-
-```
-usersGroups: [ 
-  group: (
-    groupID: int,
-    name: string,
-    channels: [
-      channel: (
-        channelID: int,
-        name: string,
-      )
-    ],
-  )
-]
+  superAdmin: boolean,
+  userName: string (indexed),
+  userEmail: string,
+  color: int,
+  groups: [ {
+    groupName: string,
+    groupAdmin: boolean,
+    channels: [ channelName: string ],
+  } ],
+}
 ```
 
 #### Channel's participants
 The participant list contained in this structure is dependent on teh channel currently selected. Each participant contains the username, color and isadminstatus. Note that isadmin is true if the user is either groupadmin or superadmin.
 
 ```
-participants: [  
-  participant:(
-    username: string,
-    color: int,
-    isadmin: boolean,
-  )
-]
+participants: { userName: string => color: int }
 ```
 
 #### Messages
@@ -232,10 +205,10 @@ The message histpry contained in this structure depends on the channel currently
 ```
 messages: [
   message: (
-    username: string,
+    userName: string,
+    color: int,
     content: string,
     datetime: string,
-    color: int,
   )
 ]
 ```
@@ -245,12 +218,8 @@ This strcture is used to manage user. It can be used to add users to and remove 
 
 ```
 manageUsers: {
-  availableUsers: {
-    userID: int,
-    username: string,
-    useremail: string,
-  },
-  selectedUserID: [ userID: int ],
+  availableUsers: [ userName: string ],
+  selectedUserNames: [ userName: string ],
 }
 ```
 
