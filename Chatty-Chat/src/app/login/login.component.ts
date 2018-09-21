@@ -24,8 +24,8 @@ export class LoginComponent implements OnInit {
   }
 
   // store userID and navigate to dash
-  autherise(userID:number){
-    localStorage.setItem('userID', userID.toString());
+  autherise(userID:string){
+    localStorage.setItem('userID', userID);
     this.router.navigate(['/dash']);
   }
 

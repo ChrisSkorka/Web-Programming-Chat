@@ -21,7 +21,7 @@ export class DashboardComponent implements OnInit {
   editing_channel_participants:boolean = false;
 
   // user properties
-  userID:number = -1;
+  userID:string = null;
   username:string = '';
   useremail:string = '';
   color:number = 0;
@@ -43,7 +43,7 @@ export class DashboardComponent implements OnInit {
 
   // get userID and download user info and group and channel lists
   ngOnInit() {
-    this.userID = Number(localStorage.getItem('userID'));
+    this.userID = localStorage.getItem('userID');
     this.refreshUserData();
   }
 
@@ -525,10 +525,10 @@ export class DashboardComponent implements OnInit {
         if(res.error == null){
 
           // copy info
-          this.superadmin = res.data.userdata.superadmin;
-          this.username = res.data.userdata.username;
-          this.useremail = res.data.userdata.useremail;
-          this.color = res.data.userdata.color;
+          this.superadmin = res.data.superadmin;
+          this.username = res.data.username;
+          this.useremail = res.data.useremail;
+          this.color = res.data.color;
           this.groups = res.data.groups;
 
           // array of false's, one per group, determine expansion of groups channel lists

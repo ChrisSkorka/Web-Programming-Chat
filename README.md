@@ -113,10 +113,9 @@ users: (
   userEmail: string,
   color: int,
   password: string,
-  groups: { groupName: string, => ( 
-    groupAdmin: boolean,
-    channels: [ channelName: string ],
-   ) },
+  groups: { groupName: string, => 
+    channels: { channelName: string => groupAdmin: boolean },
+   },
 )
 ```
 

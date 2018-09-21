@@ -61,7 +61,7 @@
       <p class="section-header"><span>Groups</span><span class="clickable" *ngIf="groupadmin" (click)="onClickManageGroups()">Edit</span></p>
       
       <!-- Container for each group and channel list generated -->
-      <div class="group-contianer" *ngFor="let group of groups; index as i">
+      <div class="group-contianer" *ngFor="let group in groups">
 
         <!-- group it self, has name, member, delete and expand -->
         <div class="group clickable" [class.expanded]="channel_list_visibilities[i]" (click)="onClickGroup(i)">

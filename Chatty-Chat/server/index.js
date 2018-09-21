@@ -5,6 +5,7 @@ var app = express();
 var http = require("http").Server(app);
 var fs = require('fs');
 var mongo = require('mongodb').MongoClient;
+var ObjectID = require('mongodb').ObjectID;
 
 // server settings
 var port = 3000;
@@ -135,24 +136,62 @@ function routeLogin(req, res){
 	// find user in db
 	let username = req.body.username;
 	let password = req.body.password;
-	users.findOne({username: username}, {projection: {_id:1, password:1}},  (error, result) => {
-		
-		// if database error
-		if(error)
-			respondInternalError(res);
+
+	users.findOne(
+		{username: username}, 
+		{projection: {_id:1, password:1}}
+		).then( user => {
 
 		// check if user exists
-		else if(result == null)
+		if(user == null)
 			respondError(res, 'User does not exist');
 
 		// check if password matches
-		else if(result.password != password)
+		else if(user.password != password)
 			respondError(res, 'Password is incorrect');
 
 		// if user is verified return token (id)
 		else
-			respondData(res, result._id);
+			respondData(res, user._id);
+
+			console.log("typeof user._id " + typeof user._id);
+
+	}).catch(error => {
+		respondInternalError(res);
 	});
+	
+	// let user = await users.findOne({username: username}, {projection: {_id:1, password:1}});
+
+	// // check if user exists
+	// if(user == null)
+	// 	respondError(res, 'User does not exist');
+
+	// // check if password matches
+	// else if(user.password != password)
+	// 	respondError(res, 'Password is incorrect');
+
+	// // if user is verified return token (id)
+	// else
+	// 	respondData(res, user._id);
+
+	// users.findOne({username: username}, {projection: {_id:1, password:1}},  (error, result) => {
+		
+	// 	// if database error
+	// 	if(error)
+	// 		respondInternalError(res);
+
+	// 	// check if user exists
+	// 	else if(result == null)
+	// 		respondError(res, 'User does not exist');
+
+	// 	// check if password matches
+	// 	else if(result.password != password)
+	// 		respondError(res, 'Password is incorrect');
+
+	// 	// if user is verified return token (id)
+	// 	else
+	// 		respondData(res, result._id);
+	// });
 }
 
 // process the user route
@@ -165,22 +204,48 @@ function routeUser(req, res){
 
 	// find user in database
 	let userID = req.body.userID;
-	users.findOne({_id: userID}, {projection: {password:0}},  (error, result) => {
-		
-		// if database error
-		if(error)
-			respondInternalError(res);
+	console.log(userID);
 
+	users.findOne(
+		{_id: ObjectID(userID)}, 
+		{projection: {password:0}}
+		).then(user => {
+	
+		console.log(user);
+			
 		// if user token does not exist
-		else if(result == null)
+		if(user == null)
 			respondError(res, 'User does not exist');
 
 		// if data retrived
 		else{
 			// TODO return all groups and channels if super user
-			respondData(res, result);
+			respondData(res, user);
 		}
+
+	}).catch(error => {
+		respondInternalError(res);
 	});
+
+
+	// // find user in database
+	// let userID = req.body.userID;
+	// users.findOne({_id: userID}, {projection: {password:0}},  (error, result) => {
+		
+	// 	// if database error
+	// 	if(error)
+	// 		respondInternalError(res);
+
+	// 	// if user token does not exist
+	// 	else if(result == null)
+	// 		respondError(res, 'User does not exist');
+
+	// 	// if data retrived
+	// 	else{
+	// 		// TODO return all groups and channels if super user
+	// 		respondData(res, result);
+	// 	}
+	// });
 }
 
 // process the channel route
