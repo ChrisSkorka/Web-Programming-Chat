@@ -61,11 +61,11 @@
       <p class="section-header"><span>Groups</span><span class="clickable" *ngIf="groupadmin" (click)="onClickManageGroups()">Edit</span></p>
       
       <!-- Container for each group and channel list generated -->
-      <div class="group-contianer" *ngFor="let group in groups">
+      <div class="group-contianer" *ngFor="let group of groups; index as i">
 
         <!-- group it self, has name, member, delete and expand -->
         <div class="group clickable" [class.expanded]="channel_list_visibilities[i]" (click)="onClickGroup(i)">
-          <span>{{group.name}}</span>
+          <span>{{group.groupName}}</span>
           <img class="clickable" src="/assets/expand_more.png">
           <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteGroup(group)">Delete</span>
           <span class="clickable" *ngIf="editing_groups" (click)="onClickGroupMembers(group)">Members</span>
@@ -76,7 +76,7 @@
 
           <!-- channel item for each channel, has name, member and delete -->
           <div class="channel clickable" *ngFor="let channel of group.channels; index as j" (click)="onClickChannel(channel)">
-            <span># {{channel.name}}</span>
+            <span># {{channel.channelName}}</span>
             <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteChannel(channel)">Delete</span>
             <span class="clickable" *ngIf="editing_groups" (click)="onClickChannelMembers(channel)">Members</span>
           </div>

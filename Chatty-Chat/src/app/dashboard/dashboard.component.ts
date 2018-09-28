@@ -530,6 +530,7 @@ export class DashboardComponent implements OnInit {
           this.useremail = res.data.useremail;
           this.color = res.data.color;
           this.groups = res.data.groups;
+          console.log("groups "+JSON.stringify(this.groups));
 
           // array of false's, one per group, determine expansion of groups channel lists
           this.channel_list_visibilities = new Array(this.groups.length).fill(false); 

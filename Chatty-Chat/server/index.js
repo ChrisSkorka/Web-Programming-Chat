@@ -220,6 +220,23 @@ function routeUser(req, res){
 		// if data retrived
 		else{
 			// TODO return all groups and channels if super user
+
+			// reformat groups into client compatible array
+			let groups = user.groups;
+			groups = {'groupA': {ch1: true, ch2:false, ch3:false}, groupB: {}};
+
+			console.log("1 " + JSON.stringify(groups));
+
+			groups = Object.keys(groups).map(groupName => {
+				let channels = groups[groupName];
+				channels = Object.keys(group).map(channelName => {
+					return {channelName: channelName, groupAdmin: channels[channelName]};
+				});
+				return {groupName: groupName, channels: channels};
+			});
+			user.groups = groups;
+			console.log("2 " + JSON.stringify(groups));
+
 			respondData(res, user);
 		}
 
