@@ -1,4 +1,4 @@
-<table id="content" [style.background]="getColor(color, 0.6, 0.3)">
+<table id="content" [style.background]="getColor(color, 0.6, 0.2)">
 
   <!-- top row, title, channel title and signout button -->
   <tr class="top-row">
@@ -166,11 +166,11 @@
       <!-- Email    | Remove user -->
       <table>
         <tr>
-          <td class="username" [style.color]="getColor(color, 0.6, 0.8)">{{username}}</td>
+          <td class="username" [style.color]="getColor(color, 0.2, 1)">{{username}}</td>
           <td class="new-users clickable" (click)="onClickNewUsers()" *ngIf="groupadmin">New User</td>
         </tr>
         <tr>
-          <td class="useremail" [style.color]="getColor(color, 0.6, 0.8)">{{useremail}}</td>
+          <td class="useremail" [style.color]="getColor(color, 0.2, 1)">{{useremail}}</td>
           <td class="delete-user clickable" (click)="onClickDeleteUsers()" *ngIf="superadmin">Remove User</td>
         </tr>
       </table>
