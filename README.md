@@ -109,15 +109,15 @@ users: (
   userID: int (indexed),
   active: boolean,
   superAdmin: boolean,
+  groupAdmin: boolean, 
   userName: string (indexed),
   userEmail: string,
   color: int,
   password: string,
-  groups: { groupName: string, => (
-    groupAdmin: boolean, 
-    channels: { channelName: string },
-  )
-  },
+  groups: [ (
+    groupName: string,
+    channels: [ channelName: string ],
+  ) ],
 )
 ```
 
@@ -129,8 +129,8 @@ Groups contain their name and references to its participants and channels.
 groups: ( 
   groupID: int (indexed),
   groupName: string (indexed),
-  participants: { userName: string },
-  channels: { channelName: string },
+  participants: [ userName: string ],
+  channels: [ channelName: string ],
 )
 ```
 
@@ -143,7 +143,10 @@ channels: (
   channelID: int (indexed),
   groupName: string (indexed),
   channelName: string (indexed),
-  participants: { userName: string => color: int },
+  participants: [ (
+    userName: string,
+    color: int,
+  ) ],
 )
 ```
 

@@ -26,6 +26,7 @@ export class DashboardComponent implements OnInit {
   useremail:string = '';
   color:number = 0;
   superadmin:boolean = false;
+  groupadmin:boolean = false;
 
   // content
   channelName:string = '';
@@ -47,6 +48,38 @@ export class DashboardComponent implements OnInit {
     this.refreshUserData();
   }
 
+  // gets userdate, group lists and channel lists and displays them
+  refreshUserData(){
+    // get user data request
+    this.http.post(
+      this.host + '/user', 
+      {userID:this.userID}
+    ).subscribe(
+      (res:any) => {
+        if(res.error == null){
+
+          // copy info
+          this.superadmin = res.data.superAdmin;
+          this.groupadmin = res.data.groupAdmin;
+          this.username = res.data.userName;
+          this.useremail = res.data.userEmail;
+          this.color = res.data.color;
+          this.groups = res.data.groups;
+
+          // array of false's, one per group, determine expansion of groups channel lists
+          this.channel_list_visibilities = new Array(this.groups.length).fill(false); 
+        
+        // if error, show error
+        }else{
+          alert(res.error);
+        }
+      },
+      err => {
+        alert("Error connecting to the server");
+      }
+    );
+  }
+
   // on group click
   // expands or retracts channel list
   onClickGroup(index){
@@ -55,21 +88,21 @@ export class DashboardComponent implements OnInit {
 
   // on channel click
   // get data for selected channel and show in message and participants area
-  onClickChannel(channel){
+  onClickChannel(channelName){
 
     // get channel data and messages
     this.http.post(
       this.host + '/channel', 
-      {userID:this.userID, channelID:channel.ID}
+      {userID:this.userID, channelName:channelName}
     ).subscribe(
       (res:any) => {
         if(res.error == null){
 
           // if secessful
           this.messages = res.data.messages;
-          this.participants = res.data.participants;
-          this.channelName = channel.name;
-          this.channelID = channel.ID;
+          this.participants = res.data.channel.participants;
+          this.channelName = res.data.channel.channelName;
+          this.channelID = res.data.channel.ID;
         }else{
           alert(res.error);
         }
@@ -287,7 +320,7 @@ export class DashboardComponent implements OnInit {
         // send create new group request
         this.http.post(
           this.host + '/new-group', 
-          {userID:this.userID, name:selection}
+          {userID:this.userID, groupName:selection}
         ).subscribe(
           (res:any) => {
             if(res.error == null){
@@ -331,7 +364,7 @@ export class DashboardComponent implements OnInit {
         // send create new channel request
         this.http.post(
           this.host + '/new-channel', 
-          {userID:this.userID, groupID:group.ID, name:selection}
+          {userID:this.userID, groupName:group.groupName, channelName:selection}
         ).subscribe(
           (res:any) => {
             if(res.error == null){
@@ -504,38 +537,6 @@ export class DashboardComponent implements OnInit {
 
           // empty message input
           this.newmessage = "";
-        }else{
-          alert(res.error);
-        }
-      },
-      err => {
-        alert("Error connecting to the server");
-      }
-    );
-  }
-
-  // gets userdate, group lists and channel lists and displays them
-  refreshUserData(){
-    // get user data request
-    this.http.post(
-      this.host + '/user', 
-      {userID:this.userID}
-    ).subscribe(
-      (res:any) => {
-        if(res.error == null){
-
-          // copy info
-          this.superadmin = res.data.superadmin;
-          this.username = res.data.username;
-          this.useremail = res.data.useremail;
-          this.color = res.data.color;
-          this.groups = res.data.groups;
-          console.log("groups "+JSON.stringify(this.groups));
-
-          // array of false's, one per group, determine expansion of groups channel lists
-          this.channel_list_visibilities = new Array(this.groups.length).fill(false); 
-        
-        // if error, show error
         }else{
           alert(res.error);
         }

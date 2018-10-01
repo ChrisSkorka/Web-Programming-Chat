@@ -76,7 +76,7 @@
 
           <!-- channel item for each channel, has name, member and delete -->
           <div class="channel clickable" *ngFor="let channel of group.channels; index as j" (click)="onClickChannel(channel)">
-            <span># {{channel.channelName}}</span>
+            <span># {{channel}}</span>
             <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteChannel(channel)">Delete</span>
             <span class="clickable" *ngIf="editing_groups" (click)="onClickChannelMembers(channel)">Members</span>
           </div>
@@ -112,8 +112,8 @@
 
       <!-- for each message, has username, content and datetim as well as background set -->
       <div class="message" *ngFor="let message of messages, index as i" [style.background]="getColor(message.color)">
-        <div class="username">
-          {{message.username}}
+        <div class="userName">
+          {{message.userName}}
         </div>
         <div class="content">
           {{message.content}}&nbsp;
@@ -142,8 +142,8 @@
       <!-- participant item for each of participants of current channel -->
       <!-- has username, is admin and color -->
       <div *ngFor="let participant of participants, index as i">
-        <span class="participant-name" [style.color]="getColor(participant.color, 0.6, 0.8)">{{participant.username}}</span>
-        <span class="participant-admin" *ngIf="participant.isadmin">Admin</span>
+        <span class="participant-name" [style.color]="getColor(participant.color, 0.6, 0.8)">{{participant.userName}}</span>
+        <!-- <span class="participant-admin" *ngIf="participant.isAdmin">Admin</span> -->
       </div>
 
     </td>

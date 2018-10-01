@@ -29,10 +29,11 @@ var messages;
 // default user
 var defaultUser = {
 	active:true, 
-	username: 'super', 
+	userName: 'super', 
 	password: 'super',
-	superadmin:true, 
-	useremail:'super@admin.com', 
+	superAdmin:true, 
+	groupAdmin:true, 
+	userEmail:'super@admin.com', 
 	color:0, 
 	groups:{}
 }
@@ -133,12 +134,13 @@ function routeLogin(req, res){
 	if(!('username' in req.body && 'password' in req.body))
 		return respondInvalidRequest(res);
 
-	// find user in db
-	let username = req.body.username;
+	// get values from request
+	let userName = req.body.username;
 	let password = req.body.password;
 
+	// find user in db
 	users.findOne(
-		{username: username}, 
+		{userName: userName}, 
 		{projection: {_id:1, password:1}}
 		).then( user => {
 
@@ -159,39 +161,6 @@ function routeLogin(req, res){
 	}).catch(error => {
 		respondInternalError(res);
 	});
-	
-	// let user = await users.findOne({username: username}, {projection: {_id:1, password:1}});
-
-	// // check if user exists
-	// if(user == null)
-	// 	respondError(res, 'User does not exist');
-
-	// // check if password matches
-	// else if(user.password != password)
-	// 	respondError(res, 'Password is incorrect');
-
-	// // if user is verified return token (id)
-	// else
-	// 	respondData(res, user._id);
-
-	// users.findOne({username: username}, {projection: {_id:1, password:1}},  (error, result) => {
-		
-	// 	// if database error
-	// 	if(error)
-	// 		respondInternalError(res);
-
-	// 	// check if user exists
-	// 	else if(result == null)
-	// 		respondError(res, 'User does not exist');
-
-	// 	// check if password matches
-	// 	else if(result.password != password)
-	// 		respondError(res, 'Password is incorrect');
-
-	// 	// if user is verified return token (id)
-	// 	else
-	// 		respondData(res, result._id);
-	// });
 }
 
 // process the user route
@@ -210,8 +179,6 @@ function routeUser(req, res){
 		{_id: ObjectID(userID)}, 
 		{projection: {password:0}}
 		).then(user => {
-	
-		console.log(user);
 			
 		// if user token does not exist
 		if(user == null)
@@ -221,92 +188,122 @@ function routeUser(req, res){
 		else{
 			// TODO return all groups and channels if super user
 
-			// reformat groups into client compatible array
-			let groups = user.groups;
-			groups = {'groupA': {ch1: true, ch2:false, ch3:false}, groupB: {}};
-
-			console.log("1 " + JSON.stringify(groups));
-
-			groups = Object.keys(groups).map(groupName => {
-				let channels = groups[groupName];
-				channels = Object.keys(group).map(channelName => {
-					return {channelName: channelName, groupAdmin: channels[channelName]};
-				});
-				return {groupName: groupName, channels: channels};
-			});
-			user.groups = groups;
-			console.log("2 " + JSON.stringify(groups));
-
 			respondData(res, user);
 		}
 
 	}).catch(error => {
+		console.log(error);
 		respondInternalError(res);
 	});
-
-
-	// // find user in database
-	// let userID = req.body.userID;
-	// users.findOne({_id: userID}, {projection: {password:0}},  (error, result) => {
-		
-	// 	// if database error
-	// 	if(error)
-	// 		respondInternalError(res);
-
-	// 	// if user token does not exist
-	// 	else if(result == null)
-	// 		respondError(res, 'User does not exist');
-
-	// 	// if data retrived
-	// 	else{
-	// 		// TODO return all groups and channels if super user
-	// 		respondData(res, result);
-	// 	}
-	// });
 }
 
 // process the channel route
 // returns the channel's participants and messages
 function routeChannel(req, res){
 
-	// check if user exists
-	if(!(req.body.userID in users))
-		return respondError('User does not exist');
+	// check if valid request
+	if(!('userID' in req.body && 'channelName' in req.body))
+		return respondInvalidRequest(res);
+	
+	// find user in db
+	let userID = req.body.userID;
+	let channelName = req.body.channelName;
+	let response = {channel: null, messages: null, };
 
-	// check if channel exists
-	if(!(req.body.channelID in channels))
-		return respondError('Channel does not exist');
+	// execute queries
+	// find user in db
+	users.findOne(
+		{_id: ObjectID(userID)}, 
+		{explain: true}
+		).then( dbResponse => {
 
-	// get list of all the participants
-	// get channel participants into client compatible format
-	let formattedParticipants = [];
-	for(let participant of channels[req.body.channelID].participants){
-		formattedParticipants.push({
-			username:users[participant].username,
-			color:users[participant].color,
-			isadmin:users[participant].groupadmin,
-		});
-	}
+			// check if user exists else continue
+			if(dbResponse.executionStats.executionStages.nReturned == 0)
+				respondError(res, 'User does not exist');
+			else
+				return channels.findOne({channelName: channelName}, {});
 
-	// get messages into client compatible format with aditional data (color, username)
-	let formattedMessages = [];
-	for(let message of messages[req.body.channelID]){
-		let datetime = new Date(message.datetime);
-		datetime = datetime.toLocaleTimeString() + " " + datetime.toLocaleDateString();
-		formattedMessages.push({
-			username:users[message.sender].username,
-			content:message.content,
-			datetime:datetime,
-			color:users[message.sender].color,
-		});
-	}
+	//  find channel
+	}).then( dbChannel => {
 
-	return respondData({participants:formattedParticipants, messages:formattedMessages});
+		// check if user exists
+		if(dbChannel == null)
+			respondError(res, 'Channel does not exist');
+		else{
+
+			response.channel = dbChannel;
+
+			return messages.find({groupName: response.channel.groupName, channelName: response.channel.channelName}, {}).toArray();
+		}
+
+
+	// find all messages of this channel
+	}).then( dbMessages => {
+
+		response.messages = dbMessages;
+		respondData(res, response);
+
+	}).catch(error => {
+		console.log(error);
+		respondInternalError(res);
+	});
 }
 
 // --- prototype ---
 // process the send message route
 function routeSendMessage(req, res){
+
+	// check if valid request
+	if(!('userID' in req.body && 'channelName' in req.body))
+		return respondInvalidRequest(res);
+	
+	// find user in db
+	let userID = req.body.userID;
+	let message = {
+		userName:		'',
+		groupName: 		req.body.groupName,
+		channelName: 	req.body.channelName,
+		color: 			req.body.color,
+		content: 		req.body.content,
+		datetime: 		req.body.datetime,
+	};
+
+	// execute queries
+	// find user in db
+	users.findOne(
+		{_id: ObjectID(userID)}, 
+		{projection: {userName: 1, groups: 1}}
+		).then( user => {
+
+			// check if user exists
+			if(user == null)
+				respondError(res, 'User does not exist');
+			
+			// check if user is in the channel and group
+			else{
+				for(group of user.groups){
+					if(group.groupName == message.groupName && group.channels.includes(message.channelName)){
+						message.userName = user.userName;
+						return messages.insertOne(message);
+					}
+				}
+
+				respondError(res, 'User is not in group');
+			}
+
+	//  find channel
+	}).then( result => {
+
+		respondData(res, true);
+
+	}).catch(error => {
+		console.log(error);
+		respondInternalError(res);
+	});
+
+
+
+
 
 	// if user does not exists
 	if(!(req.body.userID in users))
@@ -333,58 +330,156 @@ function routeSendMessage(req, res){
 // check permission, creates the group, adds the creator or return error
 function routeNewGroup(req, res){
 
-	// check if user exists
+	// check if valid request
+	if(!('userID' in req.body && 'groupName' in req.body))
+		return respondInvalidRequest(res);
+
+	// get values from request
 	let userID = req.body.userID;
-	if(!(userID in users))
-		return respondError('User does not exist');
+	let groupName = req.body.groupName;
+	let user = null;
 
-	// check if user has permission
-	let user = users[userID];
-	if(!user.groupadmin && !user.superadmin)
-		return respondError('User does not have the necessary permission');
+	// execute queries
+	// find user and check permissions
+	users.findOne(
+		{_id: ObjectID(userID)}, 
+		{projection: {userName:1, superAdmin: 1, groupAdmin: 1, groups: 1}}
+		).then( dbUser => {
 
-	// generate group, add it to the groups and user and add user to it
-	let groupName = req.body.name;
-	let groupID = generateID();
-	let newGroup = {name:groupName, participants:[userID], channels:[]};
-	groups[groupID] = newGroup;
-	user.groups[groupID] = [];
+			user = dbUser;
 
-	saveUserGroupChannelState();
-	return respondData(groupID);
+			// check if user exists
+			if(user == null)
+				respondError(res, 'User does not exist');
+
+			// check if user has permissions
+			else if(!user.superAdmin && !groupAdmin)
+				respondError(res, 'User does not have the necessary permission');
+
+			// if all okay continue
+			else
+				return groups.findOne({groupName: groupName}, {explain: true});
+
+	// find group, if already exists cant continue
+	}).then( dbGroups => {
+
+		// group already exists
+		if(dbGroups.executionStats.executionStages.nReturned >= 1)
+			respondError(res, 'Group name already exists');
+
+		// no group already exists with this name
+		else{
+			let group = {
+				groupName: groupName,
+				participants: [user.userName],
+				channels: [],
+			};
+			return groups.insertOne(group);
+		}
+
+	// update list of groups of user
+	}).then( result => {
+
+		user.groups.push({
+			groupName: groupName,
+			channels: [],
+		});
+
+		return users.updateOne({userName: user.userName}, { $set: {groups: user.groups}});
+
+	// if everything was successful, respond
+	}).then( result => {
+
+		respondData(res, true);
+
+	}).catch(error => {
+		console.log(error);
+		respondInternalError(res);
+	});
+
 }
 
 // process the new channel route
 // check permission, creates the channel, adds the creator and returns feedback
 function routeNewChannel(req, res){
 
-	// check if user exists
+	// check if valid request
+	if(!('userID' in req.body && 'groupName' in req.body && 'channelName' in req.body))
+		return respondInvalidRequest(res);
+
+	// get values from request
 	let userID = req.body.userID;
-	if(!(userID in users))
-		return respondError('User does not exist');
+	let groupName = req.body.groupName;
+	let channelName = req.body.channelName;
+	let user = null;
 
-	// check if user has permission
-	let user = users[userID];
-	if(!user.groupadmin && !user.superadmin)
-		return respondError('User does not have the necessary permission');
+	// execute queries
+	users.findOne(
+		{_id: ObjectID(userID)}, 
+		{projection: {password: 0}}
+		).then( dbUser => {
 
-	// check if groups exists
-	let groupID = req.body.groupID;
-	if(!(groupID in groups))
-		return respondError('Specified group does not exist');
+			user = dbUser;
 
-	// generate channel, add it to the group and channels and user
-	let channelName = req.body.name;
-	let channelID = generateID();
-	let newChannel = {group:groupID, name:channelName, participants:[userID]};
-	groups[groupID].channels.push(channelID);
-	channels[channelID] = newChannel;
-	messages[channelID] = [];
-	user.groups[groupID].push(channelID);
+			// check if user exists
+			if(user == null)
+				respondError(res, 'User does not exist');
 
-	saveUserGroupChannelState();
-	saveMessages();
-	return respondData(channelID);
+			// check if user has permissions
+			else if(!user.superAdmin && !groupAdmin)
+				respondError(res, 'User does not have the necessary permission');
+
+			// if all okay continue
+			else
+				return channels.findOne({groupName: groupName, channelName: channelName}, {explain: true});
+
+	// check if a channel with the name already exists within the group
+	}).then( dbGroups => {
+
+		// there is a channel with the name in the group
+		if(dbGroups.executionStats.executionStages.nReturned >= 1)
+			respondError(res, 'Channel name already exists in this groups');
+
+		// create new channel
+		else{
+			let channel = {
+				groupName: groupName,
+				channelName: channelName,
+				participants: [ {userName: user.userName, color: user.color} ],
+			};
+			return channels.insertOne(channel);
+		}
+
+	// get channel list from group to modify
+	}).then( result => {
+
+		return groups.findOne({groupName: groupName}, {projection: {channels: 1}});
+
+	// add channel to group
+	}).then( group => {
+
+		group.channels.push(channelName);
+		return groups.updateOne({groupName: groupName}, {$set: {channels: group.channels}});
+
+	// update groups structure of user
+	}).then( result => {
+
+		for(group of user.groups){
+			if(group.groupName == groupName)
+				group.channels.push(channelName);
+		}
+
+		return users.updateOne({userName: user.userName}, { $set: {groups: user.groups}});
+
+	// respond
+	}).then( result => {
+
+		respondData(res, true);
+
+	}).catch(error => {
+		console.log(error);
+		respondInternalError(res);
+	});
 }
 
 // process the delete group route
@@ -477,35 +572,66 @@ function routeDeleteChannel(req, res){
 // checks permission, adds new user to users
 function routeNewUser(req, res){
 
-	// check if user exists
+	// check if valid request
+	if(!('userID' in req.body && 'newUser' in req.body))
+		return respondInvalidRequest(res);
+
+	// get values from request
 	let userID = req.body.userID;
-	if(!(userID in users))
-		return respondError('Username already exists');
-
-	// check if user has permission
-	let user = users[userID];
-	if(!user.groupadmin && !user.superadmin)
-		return respondError('User does not have the necessary permission');
-
-	//check if user already exists
 	let newUser = req.body.newUser;
-	if(newUser.username in usernames)
-		return respondError('User does not exist');
 
-	// generate user, add it to users
-	let newUserID = generateID();
-	users[newUserID] = {
-		active:true, 
-		superadmin:newUser.superadmin, 
-		groupadmin:newUser.groupadmin, 
-		username:newUser.username, 
-		useremail:newUser.useremail, 
-		color:newUser.color, 
-		groups:{}};
-	usernames[newUser.username] = newUserID;
+	// execute queries
+	// check if user exists and has appropriate permissions
+	users.findOne(
+		{_id: ObjectID(userID)}, 
+		{projection: {password: 0}}
+		).then( dbUser => {
 
-	saveUserGroupChannelState();
-	return respondData(newUserID);
+			user = dbUser;
+
+			// check if user exists
+			if(user == null)
+				respondError(res, 'User does not exist');
+
+			// check if user has permissions
+			else if(!user.superAdmin && !groupAdmin)
+				respondError(res, 'User does not have the necessary permission');
+
+			// if all okay continue
+			else
+				return users.findOne({userName: newUser.userName}, {explain: true});
+
+	// check if user already exists and if not create new user
+	}).then( dbUser => {
+
+		// there is a user with the name
+		if(dbUser.executionStats.executionStages.nReturned >= 1)
+			respondError(res, 'Username already exists');
+
+		// create new user
+		else{
+			let user = {
+				active: true,
+				superAdmin: 	newUser.superAdmin,
+				groupAdmin: 	newUser.groupAdmin, 
+				userName: 		newUser.userName,
+				userEmail: 		newUser.userEmail,
+				color: 			newUser.color,
+				password: 		newUser.password,
+				groups: 		[],
+			};
+			return users.insertOne(user);
+		}
+
+	// respond
+	}).then( result => {
+
+		respondData(res, true);
+
+	}).catch(error => {
+		console.log(error);
+		respondInternalError(res);
+	});
 }
 
 // process the manage group route
@@ -873,11 +999,4 @@ function templateResponse(){
 		data: null,
 		error: null,
 	};
-}
-
-// generate a new unique ID and return it
-function generateID(){
-	id++;
-	saveIDCounter();
-	return id;
 }
