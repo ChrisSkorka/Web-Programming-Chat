@@ -30,7 +30,7 @@ export class DashboardComponent implements OnInit {
 
   // content
   channelName:string = '';
-  channelID:number = -1;
+  groupName:string = '';
   groups:any = [];
   channel_list_visibilities = [];
   participants:any = [];
@@ -102,7 +102,7 @@ export class DashboardComponent implements OnInit {
           this.messages = res.data.messages;
           this.participants = res.data.channel.participants;
           this.channelName = res.data.channel.channelName;
-          this.channelID = res.data.channel.ID;
+          this.groupName = res.data.channel.groupName;
         }else{
           alert(res.error);
         }
@@ -120,7 +120,7 @@ export class DashboardComponent implements OnInit {
 
   // on group delete option click
   // shows confirmation dialog and sends deletion request to server
-  onClickDeleteGroup(group){
+  onClickDeleteGroup(groupName){
 
     // material dialog
     let dialogConfig = new MatDialogConfig();
@@ -129,7 +129,7 @@ export class DashboardComponent implements OnInit {
 
     // data passed to dialog
     dialogConfig.data = {
-        name: group.name,
+        name: groupName,
         type: 'Group',
     };
     
@@ -142,7 +142,7 @@ export class DashboardComponent implements OnInit {
         // if positive response send delete group request
         this.http.post(
           this.host + '/delete-group', 
-          {userID:this.userID, groupID:group.ID}
+          {userID:this.userID, groupName:groupName}
         ).subscribe(
           (res:any) => {
             if(res.error == null){
@@ -163,7 +163,7 @@ export class DashboardComponent implements OnInit {
 
   // on channels delete option click
   // shows confirmation dialog and sends deletion request to server
-  onClickDeleteChannel(channel){
+  onClickDeleteChannel(groupName, channelName){
 
     // material dialog
     let dialogConfig = new MatDialogConfig();
@@ -172,8 +172,8 @@ export class DashboardComponent implements OnInit {
 
     // data passed to dialog
     dialogConfig.data = {
-        name: channel.name,
-        type: 'Channel'
+        name: channelName,
+        type: 'Channel',
     };
     
     let dialogRef = this.dialog.open(DeleteDialogComponent, dialogConfig);
@@ -185,7 +185,11 @@ export class DashboardComponent implements OnInit {
         // if positive response send delete channel request
         this.http.post(
           this.host + '/delete-channel', 
-          {userID:this.userID, channelID:channel.ID}
+          {
+            userID:       this.userID, 
+            channelName:  channelName,
+            groupName:    groupName,
+          }
         ).subscribe(
           (res:any) => {
             if(res.error == null){
@@ -207,27 +211,35 @@ export class DashboardComponent implements OnInit {
   // on group member option click
   // gets the users that can be in the group and are in the group and allows
   // the user to add or remove users from the group
-  onClickGroupMembers(group){
+  onClickGroupMembers(groupName){
     
     // get all user and users already in group
     this.http.post(
       this.host + '/manage-group', 
-      {userID:this.userID, groupID:group.ID}
+      {
+        userID:     this.userID, 
+        groupName:  groupName,
+      }
     ).subscribe(
       (res:any) => {
         if(res.error == null){
           
           // get all users and users already in group
-          let availableUsers = res.data.availableUsers;
-          let selectedIDs = res.data.selectedIDs;
+          let availableUsers =    res.data.availableUsers;
+          let selectedUserNames = res.data.selectedUserNames;
 
           // show manage users dialog to add and remove users from group
-          this.manageUsers(availableUsers, selectedIDs, (add, remove)=>{
+          this.manageUsers(availableUsers, selectedUserNames, (add, remove)=>{
             
             // send proposed changes to the server
             this.http.post(
               this.host + '/update-group', 
-              {userID:this.userID, groupID:group.ID, add:add, remove:remove}
+              {
+                userID:     this.userID, 
+                groupName:  groupName, 
+                add:        add, 
+                remove:     remove,
+              }
             ).subscribe(
               (res:any) => {
                 if(res.error == null){
@@ -254,26 +266,36 @@ export class DashboardComponent implements OnInit {
   // on channels member option click
   // gets the users that can be in the channel and are in the channel and allows
   // the user to add or remove users from the channel
-  onClickChannelMembers(channel){
+  onClickChannelMembers(groupName, channelName){
     // get users from channel and group
     this.http.post(
       this.host + '/manage-channel', 
-      {userID:this.userID, channelID:channel.ID}
+      {
+        userID:       this.userID, 
+        groupName:    groupName,
+        channelName:  channelName,
+      }
     ).subscribe(
       (res:any) => {
         if(res.error == null){
           
           // users from group and channel
           let availableUsers = res.data.availableUsers;
-          let selectedIDs = res.data.selectedIDs;
+          let selectedUserNames = res.data.selectedUserNames;
 
           // show manage users dialog 
-          this.manageUsers(availableUsers, selectedIDs, (add, remove)=>{
+          this.manageUsers(availableUsers, selectedUserNames, (add, remove)=>{
             
             // send proposed changes to server
             this.http.post(
               this.host + '/update-channel', 
-              {userID:this.userID, channelID:channel.ID, add:add, remove:remove}
+              {
+                userID:       this.userID, 
+                groupName:    groupName, 
+                channelName:  channelName, 
+                add:          add, 
+                remove:       remove,
+              }
             ).subscribe(
               (res:any) => {
                 if(res.error == null){
@@ -476,7 +498,7 @@ export class DashboardComponent implements OnInit {
 
   // shows manage users dialog with list of users (some checked) and apon completion 
   // invokes the update callback function
-  manageUsers(availableUsers:any, selectedIDs:any, update:(add:any, remove:any)=>any){
+  manageUsers(availableUsers:any, selectedUserNames:any, update:(add:any, remove:any)=>any){
 
     // material dialog
     let dialogConfig = new MatDialogConfig();
@@ -485,8 +507,8 @@ export class DashboardComponent implements OnInit {
 
     // data passed to dialog, all users to list, users selected
     dialogConfig.data = {
-      availableUsers:availableUsers,
-      selectedIDs:selectedIDs,
+      availableUsers:     availableUsers,
+      selectedUserNames:  selectedUserNames,
     };
     
     let dialogRef = this.dialog.open(ManageUsersDialogComponent, dialogConfig);
@@ -512,26 +534,35 @@ export class DashboardComponent implements OnInit {
     }
 
     // if no channel selected report it
-    if(this.channelID == -1){
+    if(this.channelName == ''){
       alert("No channel selected, open a channel from groups on the left");
       return;
     }
 
+    let date = new Date(Date.now());
+    let datetime = date.toLocaleTimeString() + " " + date.toLocaleDateString()
+
     // if positive response send delete channel request
     this.http.post(
       this.host + '/send-message', 
-      {userID:this.userID, content: this.newmessage, datetime: Date.now(), channelID:this.channelID}
+      {
+        userID:       this.userID, 
+        content:      this.newmessage, 
+        datetime:     datetime, 
+        color:        this.color,
+        groupName:    this.groupName, 
+        channelName:  this.channelName
+      }
     ).subscribe(
       (res:any) => {
         if(res.error == null){
 
           // if sucessful, add message locally
-          let datetime = new Date(Date.now());
 
           this.messages.push({
-            username: this.username,
+            userName: this.username,
             content: this.newmessage,
-            datetime: datetime.toLocaleTimeString() + " " + datetime.toLocaleDateString(),
+            datetime: datetime,
             color: this.color,
           });
 

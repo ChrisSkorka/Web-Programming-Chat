@@ -300,30 +300,6 @@ function routeSendMessage(req, res){
 		console.log(error);
 		respondInternalError(res);
 	});
-
-
-
-
-
-	// if user does not exists
-	if(!(req.body.userID in users))
-		return respondError('User does not exist');
-	
-	// if channel or messages do not exists
-	let channelID = req.body.channelID;
-	if(!(channelID in channels && channelID in messages))
-		return respondError('User does not exist');
-
-	// add message
-	let message = {
-		sender: req.body.userID,
-		content: req.body.content,
-		datetime: req.body.datetime,
-	}
-	messages[channelID].push(message);
-	
-	saveMessages();
-	return respondData(true);
 }
 
 // process the new group route
@@ -343,7 +319,7 @@ function routeNewGroup(req, res){
 	// find user and check permissions
 	users.findOne(
 		{_id: ObjectID(userID)}, 
-		{projection: {userName:1, superAdmin: 1, groupAdmin: 1, groups: 1}}
+		{projection: {password: 0}}
 		).then( dbUser => {
 
 			user = dbUser;
@@ -434,10 +410,10 @@ function routeNewChannel(req, res){
 				return channels.findOne({groupName: groupName, channelName: channelName}, {explain: true});
 
 	// check if a channel with the name already exists within the group
-	}).then( dbGroups => {
+	}).then( dbChannel => {
 
 		// there is a channel with the name in the group
-		if(dbGroups.executionStats.executionStages.nReturned >= 1)
+		if(dbChannel.executionStats.executionStages.nReturned >= 1)
 			respondError(res, 'Channel name already exists in this groups');
 
 		// create new channel
@@ -527,6 +503,98 @@ function routeDeleteGroup(req, res){
 // process the delete channel route
 // check permission, delete group from groups and users
 function routeDeleteChannel(req, res){
+
+
+	// check if valid request
+	if(!('userID' in req.body && 'groupName' in req.body && 'channelName' in req.body))
+		return respondInvalidRequest(res);
+
+	// get values from request
+	let userID = req.body.userID;
+	let groupName = req.body.groupName;
+	let channelName = req.body.channelName;
+	let participants = [];
+	let user = null;
+
+	// execute queries
+	users.findOne(
+		{_id: ObjectID(userID)}, 
+		{projection: {password: 0}}
+		).then( dbUser => {
+
+			user = dbUser;
+
+			// check if user exists
+			if(user == null)
+				respondError(res, 'User does not exist');
+
+			// check if user has permissions
+			else if(!user.superAdmin && !groupAdmin)
+				respondError(res, 'User does not have the necessary permission');
+
+			// if all okay continue
+			else
+				return channels.findOne({groupName: groupName, channelName: channelName}, {projection: {participants: 1}});
+
+	// check if the channel exists within the group
+	}).then( dbChannel => {
+
+		// there is no channel with the name in the group
+		if(dbChannel == null)
+			respondError(res, 'Specified channel does not exist');
+
+		// remove channel
+		else{
+			participants = dbChannel.participants;
+			return channels.delete({groupName: groupName, channelName: channelName});
+		}
+
+	// channel deleted, delete it from users and groups
+	}).then( result => {
+
+		return users.find({userName: {$in: participants}}, {projection: {groups: 1}}).toArray();
+
+	}).then( users => {
+
+		for(user of users){
+
+			// remove channel from users group-channel structure
+			for(group of user.groups){
+				if(group.groupName == groupName){
+					let index = group.channels.indexOf(channelName);
+					group.channels.splice(index, 1);
+				}
+			}
+		}
+
+		return users.updateOne({_id: ObjectID(userID)}, {$set: {groups: user.groups}});
+
+	// get groups channel list
+	}).then( result => {
+
+		return groups.findOne({groupName: groupName}, {projection: {channels: 1}});
+
+	// update groups channel list
+	}).then( group => {
+
+		let index = group.channels.indexOf(channelName);
+		group.channels.splice(index, 1);
+
+		return groups.updateOne({groupName: groupName}, { $set: {channels: group.channels}});
+
+	// respond
+	}).then( result => {
+
+		respondData(res, true);
+
+	}).catch(error => {
+		console.log(error);
+		respondInternalError(res);
+	});
+
+
+
+
 
 	// check if user exists
 	let userID = req.body.userID;

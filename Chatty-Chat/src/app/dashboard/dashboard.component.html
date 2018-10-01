@@ -77,8 +77,8 @@
           <!-- channel item for each channel, has name, member and delete -->
           <div class="channel clickable" *ngFor="let channel of group.channels; index as j" (click)="onClickChannel(channel)">
             <span># {{channel}}</span>
-            <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteChannel(channel)">Delete</span>
-            <span class="clickable" *ngIf="editing_groups" (click)="onClickChannelMembers(channel)">Members</span>
+            <span class="warning clickable" *ngIf="editing_groups" (click)="onClickDeleteChannel(group.groupName, channel)">Delete</span>
+            <span class="clickable" *ngIf="editing_groups" (click)="onClickChannelMembers(group.groupName, channel)">Members</span>
           </div>
 
           <!-- create new channel for this group if in edit mode -->
