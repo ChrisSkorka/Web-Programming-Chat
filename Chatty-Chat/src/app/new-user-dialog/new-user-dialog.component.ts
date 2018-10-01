@@ -10,6 +10,7 @@ export class NewUserDialogComponent implements OnInit {
 
   username:string = '';
   email:string = '';
+  password:string = '';
   color:number = 0;
   type:number = 0;
   maxType:number = 1;
@@ -34,6 +35,7 @@ export class NewUserDialogComponent implements OnInit {
     this.dialogRef.close({
       username:this.username,
       useremail:this.email,
+      password:this.password,
       color:this.color,
       groupadmin:this.type > 0,
       superadmin:this.type == 2,
