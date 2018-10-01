@@ -3,19 +3,11 @@ var bodyParser = require('body-parser');
 var express = require("express");
 var app = express();
 var http = require("http").Server(app);
-var fs = require('fs');
 var mongo = require('mongodb').MongoClient;
 
 // database settings
 var url = "mongodb://localhost:27017/";
 var dbName = "chattychat";
-
-var collectionNameUsers 	= "users";
-var collectionNameUseranmes = "usernames";
-var collectionNameGroups 	= "groups";
-var collectionNameChannels 	= "channels";
-var collectionNameMessages 	= "messages";
-var collectionNameConfig 	= "config";
 
 // database collections
 var dbServer;
@@ -24,14 +16,16 @@ var usernames;
 var groups;
 var channels;
 var messages;
-var config;
-
+var id;
+var state;
 
 // connect and setup database
 setupDatabase();
 
 // start srver
 startServer();
+
+// FUNCTION DEFINETIONS ------------------------------------------------------------------------------------------------
 
 // connect to database
 function setupDatabase(){
@@ -51,23 +45,15 @@ function setupDatabase(){
 		process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
 
 		// get collections
-		users 		= db.collection(collectionNameUsers);
-		usernames 	= db.collection(collectionNameUseranmes);
-		groups 		= db.collection(collectionNameGroups);
-		channels 	= db.collection(collectionNameChannels);
-		messages 	= db.collection(collectionNameMessages);
-		config		= db.collection(collectionNameConfig);
+		state = db.collection('chattychat');
 
-		// if no user exists, create the default super user
-		db.collection("users").find({}).toArray(function(err, result) {
-			if (err) throw err;
-			console.log(result);
-		});
+		initState();
 	})
 }
 
 // program exit handler, closes database when the program finishes, crashes or is killed
 function exitHandler(options, exitCode){
+
 	dbServer.close();
 	console.log("Disconnected from database");
 
@@ -78,21 +64,52 @@ function exitHandler(options, exitCode){
 function initState(){
 
 	// default values (superadmin is default user)
-	users = {
-		0:{active:true, superadmin:true, groupadmin:true, username:'super', useremail:'super@admin.com', color:0, groups:{}},
+	defaultUsers = {
+		0:{
+			active:		true, 
+			superadmin:	true, 
+			groupadmin:	true, 
+			username:	'super', 
+			useremail:	'super@admin.com', 
+			password: 	'super',
+			color:		0, 
+			groups:		{},
+		},
 	};
-	usernames = {'super':0,};
-	groups = {};
-	channels = {};
-	messages = {};
-	id = 1;
+	defaultUsernames = {'super':0,};
+	defaultGroups = {};
+	defaultChannels = {};
+	defaultMessages = {};
+	defaultId = 1;
 
-	// save everything
-	saveUsers();
-	saveGroups();
-	saveChannels();
-	saveMessages();
-	saveIDCounter();
+	state.findOne({}, {}).then( result => {
+		if(result == null){
+
+			state.insertOne({
+				users: 		defaultUsers,
+				usernames: 	defaultUsernames,
+				groups: 	defaultGroups,
+				channels: 	defaultChannels,
+				messages: 	defaultMessages,
+				id: 		defaultId,
+			});
+
+			users = 	defaultUsers;
+			usernames = defaultUsernames;
+			groups = 	defaultGroups;
+			channels = 	defaultChannels;
+			messages = 	defaultMessages;
+			id = 		defaultId;
+			
+		} else {
+			users = 	result.users;
+			usernames = result.usernames;
+			groups = 	result.groups;
+			channels = 	result.channels;
+			messages = 	result.messages;
+			id = 		result.id;
+		}
+	}).catch(error => console.log(error));
 }
 
 //start server
@@ -165,16 +182,20 @@ function startServer(){
 // either returns the user id or an error
 function routeLogin(req){
 
-	// if the user exists return the user id
-	let username = req.body.username
-	if(username in usernames){
-		let userID = usernames[username];
-		return data(userID);
-
 	// if the user does not exist, return an error
-	}else{
+	let username = req.body.username
+	if(!(username in usernames))
 		return error('User does not exist');
-	}
+	
+	// if the user exists check password
+	let userID = usernames[username];
+	let password = req.body.password;
+	if(password != users[userID].password)
+		return error('Incorrect password');
+
+	// user is validated
+	return data(userID);
+
 }
 
 // process the user route
@@ -478,6 +499,7 @@ function routeNewUser(req){
 		groupadmin:newUser.groupadmin, 
 		username:newUser.username, 
 		useremail:newUser.useremail, 
+		password:newUser.password,
 		color:newUser.color, 
 		groups:{}};
 	usernames[newUser.username] = newUserID;
@@ -752,64 +774,27 @@ function routeUpdateUsers(req){
 
 // saves users and usernames to file
 function saveUsers(){
-	fs.writeFile(fNameUsers, JSON.stringify(users), (error) => {
-		if(error){
-			// notify of the error
-			console.log('Error writing '+fNameUsers);
-			console.log(error);
-		}
-	});
-	fs.writeFile(fNameUsernames, JSON.stringify(usernames), (error) => {
-		if(error){
-			// notify of the error
-			console.log('Error writing '+fNameUsernames);
-			console.log(error);
-		}
-	});
+	state.updateOne({}, {$set: {users: users, usernames: usernames}});
 }
 
 // saves groups to file
 function saveGroups(){
-	fs.writeFile(fNameGroups, JSON.stringify(groups), (error) => {
-		if(error){
-			// notify of the error
-			console.log('Error writing '+fNameGroups);
-			console.log(error);
-		}
-	});
+	state.updateOne({}, {$set: {groups: groups}});
 }
 
 // saves channels to file
 function saveChannels(){
-	fs.writeFile(fNameChannels, JSON.stringify(channels), (error) => {
-		if(error){
-			// notify of the error
-			console.log('Error writing '+fNameChannels);
-			console.log(error);
-		}
-	});
+	state.updateOne({}, {$set: {channels: channels}});
 }
 
 // saves messages to file
 function saveMessages(){
-	fs.writeFile(fNameMessages, JSON.stringify(messages), (error) => {
-		if(error){
-			// notify of the error
-			console.log('Error writing '+fNameMessages);
-			console.log(error);
-		}
-	});
+	state.updateOne({}, {$set: {messages: messages}});
 }
 
 // saves id counter to file
 function saveIDCounter(){
-	fs.writeFile(fNameId, JSON.stringify(id), (error) => {
-		if(error){
-			// notify of the error
-			console.log('Error writing '+fNameId);
-			console.log(error);
-		}
-	});
+	state.updateOne({}, {$set: {id: id}});
 }
 
 // save users, usernames, groups and channels (for convinience)
