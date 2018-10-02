@@ -1,4 +1,5 @@
 # Web-Programming-Chat
+
 Web programming assignment chat web app
 
 Author: Christopher Skorka
@@ -6,17 +7,22 @@ Author: Christopher Skorka
 Description: web application for users to communicate in chennels and groups to other participants in real time.
 
 ## Git (Version Control)
+
 ### Layout
+
 - Chatty-Chat:      Chat angular and server application source code
   - src:              client source code (angular)
   - server:           server source code (nodejs)
-- prototyping:      maily screen design prototyping
+  - database:         database file locations (mongo)
+- prototyping:      mainly screen design prototyping
 - media:            assest and corresponding production files
 
 ### Version Control Approach
-The project is commited with every significant change. Such change may include addition of a significant feature, bug fix or a number of little addition.
+
+The project is commited with every significant change. Such change may include addition of a significant feature, bug fix or a number of little addition. Each commit should be functional and the features it introduces should be complete such that the project as a whole can run as correctly as can be expected from the stage the project is at.
 
 ## Requirements / appication model:
+
 - Groups
   - Channels
 - Users
@@ -51,6 +57,7 @@ The project is commited with every significant change. Such change may include a
       - Text box to send messages
 
 ## Functions:
+
 - Server
   - Check if autherised for all actions
     - Return error structures to unautherisd requests
@@ -89,18 +96,21 @@ The project is commited with every significant change. Such change may include a
       - If correct, save them
   - If Group admin or super admin, show group, channel and participants managment options
 
-## Data structures:
+## Data structures
 
 Key:
+
 - { name1: type1 => name2: type2 } denotes a mapping of name1: type1 onto name2: type2
 - ( fiel1: type1, ... ) denotes an object with fields file1: type1, ...
 - [ name: type ]  denotes an array of elements of type type
 
 ### Server representation:
+
 In the server representation users, groups and channels are all doubly linked
 This is to improve access and writing efficiency
 
 #### Users
+
 ---
 User objects contain basic information and references to the groups and channels thay are part of. Usernames allows fast checks of usernames (ie does such a user exists).
 
@@ -111,6 +121,7 @@ users: { userID:int -> (
   groupadmin: boolean,
   username: string,
   useremail: string,
+  password: string,
   colo: int,
   groups: { groupID:int => [channelID: int ]}
 )}
@@ -120,18 +131,8 @@ users: { userID:int -> (
 usernames: { username: string => userID }
 ```
 
-#### Passwords
----
-Passwords are not yet implemented.
-
-```
-passwords: { userID:int => (
-  passwordHash: string,
-  passwordSalt: string,
-)}
-```
-
 #### Groups
+
 ---
 Groups contain their name and references to its participants and channels.
 
@@ -144,6 +145,7 @@ groups: { groupID => (
 ```
 
 #### Channels
+
 ---
 Channels contain name and references to the group they belong to and its participants.
 
@@ -156,6 +158,7 @@ channels: { channelID:int => (
 ```
 
 #### Messsages
+
 ---
 Messages are indexed by they channel ID (map from ID to message history). Each message contains a reference to the sender, the content and datetime in seconds from epoch format. Messages are stored seperate from channels to improve write and access performance. 
 
@@ -169,10 +172,30 @@ messages: { channelID:int => [
 ]}
 ```
 
+### Database
+
+The data is stored in a single document of the collection 'chattychat' in database the database 'chattychat', it holds the above listed server objects.
+
+```
+chattychat: (
+  users: Object,
+  usernames: Object,
+  groups: Object,
+  channels: Object,
+  messages: Object,
+  id: int,
+)
+
+```
+
+Each field of this document is updated as needed individually whenever the server changes state. 
+
 ### Client representation
+
 In the client representation objects contain the data directly rather than linking to other strscture.
 
 #### User Token
+
 USed to identify a signed in user
 
 ```
@@ -180,6 +203,7 @@ userID: int
 ```
 
 #### User
+
 ---
 A single user object with basic information about the signin user as well as references to the users groups and channels.
 
@@ -196,6 +220,7 @@ user: (
 ```
 
 #### User's Groups and Channels
+
 List of groups the user is part of. Each group has lists of channels that the user is part of. This is used to build the group and channel list.
 
 ```
@@ -214,6 +239,7 @@ usersGroups: [
 ```
 
 #### Channel's participants
+
 The participant list contained in this structure is dependent on teh channel currently selected. Each participant contains the username, color and isadminstatus. Note that isadmin is true if the user is either groupadmin or superadmin.
 
 ```
@@ -227,6 +253,7 @@ participants: [
 ```
 
 #### Messages
+
 The message histpry contained in this structure depends on the channel currently selected. Each message contains the senders username, content, datetime in a readable format and user's color.
 
 ```
@@ -241,6 +268,7 @@ messages: [
 ```
 
 #### Managing Users
+
 This strcture is used to manage user. It can be used to add users to and remove them from groups, channels and the service. availableUsers is a list of all users that qualify given the context (ie only users is the parent group can be added to a channel). selectedUserID is a list of ids that is included in the to be managed entiry (ie users part of a channel).
 
 ```
@@ -257,6 +285,7 @@ manageUsers: {
 ## REST API - Routes
 
 ### Client routes
+
 Routes created by the client locally in the borwser
 
 | Route  | Purpose |
@@ -266,9 +295,10 @@ Routes created by the client locally in the borwser
 | /dash  | signin dashboard with all functionality dependign on user                |
 
 ### Server post routes
+
 Routes used to transfere reques and data bestween client and server. Note User token is shorted to UT, UT's are used for most request to verify authority to perform actions.
 
-| Route           | Action | In | Out | 
+| Route           | Action | In | Out |
 |-----------------|--------|----|-----|
 | /login          | verifies a login request  | username, password  | User token or error                                      |
 | /user           | provides user information | user token          | user information, group and channel lists                |
@@ -284,9 +314,12 @@ Routes used to transfere reques and data bestween client and server. Note User t
 | /update-group   | add and remove user from a group and its channels | UT, users to add, users to remove | succes status |
 | /update-channel | add and remove users from a channel               | UT, users to add, userd to remove | succes status |
 | /update-users   | remove people from the system                             | UT, users to be removed   | succes status |
+| /send-message   | registered a new message and saves it                 | UT, sender, content, datetime | succes status |
 
 ## Angular Architecture
+
 ### Custom Components
+
 | Name                | Purpose |
 |---------------------|---------|
 | login               | Login page, presents the user with a simple layout that allows them to sign in. If sign in fails approriate errors are shown |
@@ -297,6 +330,7 @@ Routes used to transfere reques and data bestween client and server. Note User t
 | manage-user-dialog  | Dialog that allows users to be added to and removed from groups, channels and the system |
 
 ### Hierarchy
+
 ```
       app
      /   \
@@ -314,6 +348,7 @@ dialog dialog   user-  user-
 ```
 
 ## Compilation (Tested)
+
 - Client compiles on
   - Angular CLI: 6.1.2
   - Node: 8.11.1
