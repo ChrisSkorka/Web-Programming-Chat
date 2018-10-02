@@ -559,8 +559,6 @@ export class DashboardComponent implements OnInit {
   // refresh messages and participants
   refreshMessagesAndParticipants(_this){
 
-    console.log(_this);
-
     // get channel data and messages
     _this.http.post(
       _this.host + '/channel', 
@@ -574,6 +572,9 @@ export class DashboardComponent implements OnInit {
           _this.participants = res.data.participants;
         }else{
           alert(res.error);
+          
+          // clear previously running update interval
+          _this.disselectChannel();
         }
       },
       err => {
@@ -582,6 +583,19 @@ export class DashboardComponent implements OnInit {
     );
 
 
+  }
+
+  // disselect the current channel
+  disselectChannel(){
+    
+    // clear previously running update interval
+    clearInterval(this.refresh_interval);
+
+    // clear displayed values
+    this.channelName = '';
+    this.channelID = -1;
+    this.participants = [];
+    this.messages = [];
   }
 
   // sigh out user, remove userID stored and navigate to login
