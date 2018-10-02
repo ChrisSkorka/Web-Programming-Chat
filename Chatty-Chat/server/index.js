@@ -5,25 +5,33 @@ var app = express();
 var http = require("http").Server(app);
 var mongo = require('mongodb').MongoClient;
 
-// database settings
+// database configuration
 var url = "mongodb://localhost:27017/";
 var dbName = "chattychat";
+var collectionName = "chattychat";
 
-// database collections
+// server configuration
+var serverPort = 3000;
+var staticDirectory = "\\..\\dist\\Chatty-Chat";
+
+// database objects
 var dbServer;
+var state;
+
+// state objects
 var users;
 var usernames;
 var groups;
 var channels;
 var messages;
 var id;
-var state;
 
 // run everything
 main();
 
 // FUNCTION DEFINETIONS ------------------------------------------------------------------------------------------------
 
+// setup database, state and server
 async function main(){
 	
 	// connect and setup database
@@ -53,7 +61,7 @@ async function setupDatabase(){
 	process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
 
 	// get collections
-	state = db.collection('chattychat');
+	state = db.collection(collectionName);
 }
 
 // program exit handler, closes database when the program finishes, crashes or is killed
@@ -123,9 +131,9 @@ async function initState(){
 function startServer(){
 	// main settings
 	app.use(bodyParser.json())
-	app.use(express.static(__dirname + "\\..\\dist\\Chatty-Chat"));
-	app.use("/login", express.static(__dirname + "\\..\\dist\\Chatty-Chat"));
-	app.use("/dash", express.static(__dirname + "\\..\\dist\\Chatty-Chat"));
+	app.use(express.static(__dirname + staticDirectory));
+	app.use("/login", express.static(__dirname + staticDirectory));
+	app.use("/dash", express.static(__dirname + staticDirectory));
 	app.use(function(req, res, next) {
 		res.header("Access-Control-Allow-Origin", "*");
 		res.header("Access-Control-Allow-Headers", "*");
@@ -180,8 +188,8 @@ function startServer(){
 	});
 	
 	// begin listening for connections
-	http.listen(3000);
-	console.log("server started");
+	http.listen(serverPort);
+	console.log("Server started");
 }
 
 // proces the login route
@@ -405,11 +413,16 @@ function routeNewChannel(req){
 	// generate channel, add it to the group and channels and user
 	let channelName = req.body.name;
 	let channelID = generateID();
-	let newChannel = {group:groupID, name:channelName, participants:[userID]};
+	let newChannel = {group:groupID, name:channelName, participants:[]};
 	groups[groupID].channels.push(channelID);
 	channels[channelID] = newChannel;
 	messages[channelID] = [];
-	user.groups[groupID].push(channelID);
+	
+	// add user to channel if the user is in the group
+	if(groupID in user.groups){
+		newChannel.participants.push(userID);
+		user.groups[groupID].push(channelID);
+	}
 
 	saveUserGroupChannelState();
 	saveMessages();
@@ -875,11 +888,12 @@ function respondError(msg){
 	return response;
 }
 
-// error response
+// invalid request response, if not the sufficient data was provided
 function respondInvalidRequest(){
 	return respondError('Invalid request');
 }
 
+// data response
 function respondData(msg){
 	let response = templateResponse();
 	response.data = msg;

@@ -115,6 +115,9 @@ export class DashboardComponent implements OnInit {
     dialogRef.afterClosed().subscribe((selection) => {
       if(selection){
 
+        // disselect currently selected channel in case its deleted
+        this.disselectChannel();
+
         // if positive response send delete group request
         this.http.post(
           this.host + '/delete-group', 
@@ -157,6 +160,9 @@ export class DashboardComponent implements OnInit {
     // on dialog close send request
     dialogRef.afterClosed().subscribe((selection) => {
       if(selection){
+
+        // disselect currently selected channel in case its deleted
+        this.disselectChannel();
 
         // if positive response send delete channel request
         this.http.post(
