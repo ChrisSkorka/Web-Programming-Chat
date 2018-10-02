@@ -314,7 +314,7 @@ function routeSendMessage(req){
 	// if channel or messages do not exists
 	let channelID = req.body.channelID;
 	if(!(channelID in channels && channelID in messages))
-		return error('User does not exist');
+		return error('Channel does not exist');
 
 	// add message
 	let message = {
