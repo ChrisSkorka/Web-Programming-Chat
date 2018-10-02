@@ -19,36 +19,41 @@ var messages;
 var id;
 var state;
 
-// connect and setup database
-setupDatabase();
-
-// start srver
-startServer();
+// run everything
+main();
 
 // FUNCTION DEFINETIONS ------------------------------------------------------------------------------------------------
 
+async function main(){
+	console.log('A');
+	// connect and setup database
+	await setupDatabase();
+	
+	// initialize the state, either restore from db or save new default
+	await initState();
+	
+	// start srver
+	startServer();
+}
+
 // connect to database
-function setupDatabase(){
+async function setupDatabase(){
 
-	mongo.connect(url, function(err, dbs){
-		if (err) throw err;
+	dbs = await mongo.connect(url);
 
-		// connect to database
-		dbServer = dbs
-		let db = dbServer.db(dbName);
+	// connect to database
+	dbServer = dbs
+	let db = dbServer.db(dbName);
 
-		// once connected, register on exit signal handler to close db
-		process.on('exit', 		exitHandler.bind(null, {cleanup:true}));
-		process.on('SIGINT', 	exitHandler.bind(null, {exit:true}));
-		process.on('SIGUSR1', 	exitHandler.bind(null, {exit:true}));
-		process.on('SIGUSR2', 	exitHandler.bind(null, {exit:true}));
-		process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
+	// once connected, register on exit signal handler to close db
+	process.on('exit', 		exitHandler.bind(null, {cleanup:true}));
+	process.on('SIGINT', 	exitHandler.bind(null, {exit:true}));
+	process.on('SIGUSR1', 	exitHandler.bind(null, {exit:true}));
+	process.on('SIGUSR2', 	exitHandler.bind(null, {exit:true}));
+	process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
 
-		// get collections
-		state = db.collection('chattychat');
-
-		initState();
-	})
+	// get collections
+	state = db.collection('chattychat');
 }
 
 // program exit handler, closes database when the program finishes, crashes or is killed
@@ -61,7 +66,7 @@ function exitHandler(options, exitCode){
 }
 
 // nitialize a new blank state
-function initState(){
+async function initState(){
 
 	// default values (superadmin is default user)
 	defaultUsers = {
@@ -82,34 +87,35 @@ function initState(){
 	defaultMessages = {};
 	defaultId = 1;
 
-	state.findOne({}, {}).then( result => {
-		if(result == null){
+	let result = await state.findOne({}, {});
 
-			state.insertOne({
-				users: 		defaultUsers,
-				usernames: 	defaultUsernames,
-				groups: 	defaultGroups,
-				channels: 	defaultChannels,
-				messages: 	defaultMessages,
-				id: 		defaultId,
-			});
+	if(result == null){
 
-			users = 	defaultUsers;
-			usernames = defaultUsernames;
-			groups = 	defaultGroups;
-			channels = 	defaultChannels;
-			messages = 	defaultMessages;
-			id = 		defaultId;
-			
-		} else {
-			users = 	result.users;
-			usernames = result.usernames;
-			groups = 	result.groups;
-			channels = 	result.channels;
-			messages = 	result.messages;
-			id = 		result.id;
-		}
-	}).catch(error => console.log(error));
+		state.insertOne({
+			users: 		defaultUsers,
+			usernames: 	defaultUsernames,
+			groups: 	defaultGroups,
+			channels: 	defaultChannels,
+			messages: 	defaultMessages,
+			id: 		defaultId,
+		});
+
+		users = 	defaultUsers;
+		usernames = defaultUsernames;
+		groups = 	defaultGroups;
+		channels = 	defaultChannels;
+		messages = 	defaultMessages;
+		id = 		defaultId;
+		
+	} else {
+		users = 	result.users;
+		usernames = result.usernames;
+		groups = 	result.groups;
+		channels = 	result.channels;
+		messages = 	result.messages;
+		id = 		result.id;
+	}
+	
 }
 
 //start server
@@ -182,19 +188,23 @@ function startServer(){
 // either returns the user id or an error
 function routeLogin(req){
 
+	// check if required data is provided
+	if(!('username' in req.body && 'password' in req.body))
+		return respondInvalidRequest();
+
 	// if the user does not exist, return an error
 	let username = req.body.username
 	if(!(username in usernames))
-		return error('User does not exist');
+		return respondError('User does not exist');
 	
 	// if the user exists check password
 	let userID = usernames[username];
 	let password = req.body.password;
 	if(password != users[userID].password)
-		return error('Incorrect password');
+		return respondError('Incorrect password');
 
 	// user is validated
-	return data(userID);
+	return respondData(userID);
 
 }
 
@@ -202,9 +212,13 @@ function routeLogin(req){
 // returns the user data for a given userID and corresponding groups and channels
 function routeUser(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body))
+		return respondInvalidRequest();
+
 	// check if does exists
 	if(!(req.body.userID in users))
-		return error('User does not exist');
+		return respondError('User does not exist');
 
 	let user = users[req.body.userID];
 	let usersGroups = [];
@@ -261,20 +275,24 @@ function routeUser(req){
 	}
 
 	// compose response
-	return data({userdata:user, groups:usersGroups});
+	return respondData({userdata:user, groups:usersGroups});
 }
 
 // process the channel route
 // returns the channel's participants and messages
 function routeChannel(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body && 'channelID' in req.body))
+		return respondInvalidRequest();
+
 	// check if user exists
 	if(!(req.body.userID in users))
-		return error('User does not exist');
+		return respondError('User does not exist');
 
 	// check if channel exists
 	if(!(req.body.channelID in channels))
-		return error('Channel does not exist');
+		return respondError('Channel does not exist');
 
 	// get list of all the participants
 	// get channel participants into client compatible format
@@ -300,21 +318,25 @@ function routeChannel(req){
 		});
 	}
 
-	return data({participants:formattedParticipants, messages:formattedMessages});
+	return respondData({participants:formattedParticipants, messages:formattedMessages});
 }
 
 // --- prototype ---
 // process the send message route
 function routeSendMessage(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body && 'channelID' in req.body && 'content' in req.body && 'datetime' in req.body))
+		return respondInvalidRequest();
+
 	// if user does not exists
 	if(!(req.body.userID in users))
-		return error('User does not exist');
+		return respondError('User does not exist');
 	
 	// if channel or messages do not exists
 	let channelID = req.body.channelID;
 	if(!(channelID in channels && channelID in messages))
-		return error('Channel does not exist');
+		return respondError('Channel does not exist');
 
 	// add message
 	let message = {
@@ -325,22 +347,26 @@ function routeSendMessage(req){
 	messages[channelID].push(message);
 	
 	saveMessages();
-	return data(true);
+	return respondData(true);
 }
 
 // process the new group route
 // check permission, creates the group, adds the creator or return error
 function routeNewGroup(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body && 'name' in req.body))
+		return respondInvalidRequest();
+
 	// check if user exists
 	let userID = req.body.userID;
 	if(!(userID in users))
-		return error('User does not exist');
+		return respondError('User does not exist');
 
 	// check if user has permission
 	let user = users[userID];
 	if(!user.groupadmin && !user.superadmin)
-		return error('User does not have the necessary permission');
+		return respondError('User does not have the necessary permission');
 
 	// generate group, add it to the groups and user and add user to it
 	let groupName = req.body.name;
@@ -350,27 +376,31 @@ function routeNewGroup(req){
 	user.groups[groupID] = [];
 
 	saveUserGroupChannelState();
-	return data(groupID);
+	return respondData(groupID);
 }
 
 // process the new channel route
 // check permission, creates the channel, adds the creator and returns feedback
 function routeNewChannel(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body && 'groupID' in req.body && 'name' in req.body))
+		return respondInvalidRequest();
+
 	// check if user exists
 	let userID = req.body.userID;
 	if(!(userID in users))
-		return error('User does not exist');
+		return respondError('User does not exist');
 
 	// check if user has permission
 	let user = users[userID];
 	if(!user.groupadmin && !user.superadmin)
-		return error('User does not have the necessary permission');
+		return respondError('User does not have the necessary permission');
 
 	// check if groups exists
 	let groupID = req.body.groupID;
 	if(!(groupID in groups))
-		return error('Specified group does not exist');
+		return respondError('Specified group does not exist');
 
 	// generate channel, add it to the group and channels and user
 	let channelName = req.body.name;
@@ -383,27 +413,31 @@ function routeNewChannel(req){
 
 	saveUserGroupChannelState();
 	saveMessages();
-	return data(channelID);
+	return respondData(channelID);
 }
 
 // process the delete group route
 // check permission, delete group from groups and users
 function routeDeleteGroup(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body && 'groupID' in req.body))
+		return respondInvalidRequest();
+
 	// check if user exists
 	let userID = req.body.userID;
 	if(!(userID in users))
-		return error('User does not exist');
+		return respondError('User does not exist');
 
 	// check if user has permission
 	let user = users[userID];
 	if(!user.groupadmin && !user.superadmin)
-		return error('User does not have the necessary permission');
+		return respondError('User does not have the necessary permission');
 
 	// check if groups exists
 	let groupID = req.body.groupID;
 	if(!(groupID in groups))
-		return error('Specified group does not exist');
+		return respondError('Specified group does not exist');
 
 	// delete group from groups and users
 	let group = groups[groupID];
@@ -425,29 +459,33 @@ function routeDeleteGroup(req){
 
 	saveUserGroupChannelState();
 	saveMessages();
-	return data(true);
+	return respondData(true);
 }
 
 // process the delete channel route
 // check permission, delete group from groups and users
 function routeDeleteChannel(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body && 'channelID' in req.body))
+		return respondInvalidRequest();
+
 	// check if user exists
 	let userID = req.body.userID;
 	if(!(userID in users))
-		return error('User does not exist');
+		return respondError('User does not exist');
 
 	let user = users[userID];
 
 	// check if user has permission
 	if(!user.groupadmin && !user.superadmin)
-		return error('User does not have the necessary permission');
+		return respondError('User does not have the necessary permission');
 
 		let channelID = req.body.channelID;
 
 	// check if channel exists
 	if(!(channelID in channels))
-		return error('Specified channel does not exist');
+		return respondError('Specified channel does not exist');
 
 	let channel = channels[channelID];
 	let groupID = channel.group;
@@ -469,27 +507,31 @@ function routeDeleteChannel(req){
 
 	saveUserGroupChannelState();
 	saveMessages();
-	return data(true);
+	return respondData(true);
 }
 
 // process the new user route
 // checks permission, adds new user to users
 function routeNewUser(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body && 'newUser' in req.body))
+		return respondInvalidRequest();
+
 	// check if user exists
 	let userID = req.body.userID;
 	if(!(userID in users))
-		return error('Username already exists');
+		return respondError('Username already exists');
 
 	// check if user has permission
 	let user = users[userID];
 	if(!user.groupadmin && !user.superadmin)
-		return error('User does not have the necessary permission');
+		return respondError('User does not have the necessary permission');
 
 	//check if user already exists
 	let newUser = req.body.newUser;
 	if(newUser.username in usernames)
-		return error('User does not exist');
+		return respondError('User does not exist');
 
 	// generate user, add it to users
 	let newUserID = generateID();
@@ -505,28 +547,32 @@ function routeNewUser(req){
 	usernames[newUser.username] = newUserID;
 
 	saveUserGroupChannelState();
-	return data(newUserID);
+	return respondData(newUserID);
 }
 
 // process the manage group route
 // check for permission, returns all users, user ids of group
 function routeManageGroup(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body && 'groupID' in req.body))
+		return respondInvalidRequest();
+
 	// check if user exists
 	let userID = req.body.userID;
 	if(!(userID in users))
-		return error();
+		return respondError();
 
 	let user = users[userID];
 
 	// check if user has permission
 	if(!user.groupadmin && !user.superadmin)
-		return error();
+		return respondError();
 
 	// check if groups exists
 	let groupID = req.body.groupID;
 	if(!(groupID in groups))
-		return error();
+		return respondError();
 
 	// get all users
 	let availableUsers = [];
@@ -546,27 +592,31 @@ function routeManageGroup(req){
 	// get user ids that are in the group
 	let selectedIDs = groups[groupID].participants;
 
-	return data({availableUsers:availableUsers, selectedIDs:selectedIDs});
+	return respondData({availableUsers:availableUsers, selectedIDs:selectedIDs});
 }
 
 // process the manage channel route
 // check for permission, returns users in group, user ids of channel
 function routeManageChannel(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body && 'channelID' in req.body))
+		return respondInvalidRequest();
+
 	// check if user exists
 	let userID = req.body.userID;
 	if(!(userID in users))
-		return error('User does not exist');
+		return respondError('User does not exist');
 
 	// check if user has permission
 	let user = users[userID];
 	if(!user.groupadmin && !user.superadmin)
-		return error('User does not have the necessary permission');
+		return respondError('User does not have the necessary permission');
 
 	// check if channel exists
 	let channelID = req.body.channelID;
 	if(!(channelID in channels))
-		return error('Specified group does not exist');
+		return respondError('Specified group does not exist');
 
 	let channel = channels[channelID];
 	let groupID = channel.group;
@@ -586,22 +636,26 @@ function routeManageChannel(req){
 	// get user ids from the channel
 	let selectedIDs = channel.participants;
 
-	return data({availableUsers:availableUsers, selectedIDs:selectedIDs});
+	return respondData({availableUsers:availableUsers, selectedIDs:selectedIDs});
 }
 
 // process the manage users route
 // check for permission, return all users, all user ids
 function routeManageUsers(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body))
+		return respondInvalidRequest();
+
 	// check if user exists
 	let userID = req.body.userID;
 	if(!(userID in users))
-		return error('User does not exist');
+		return respondError('User does not exist');
 
 	// check if user has permission
 	let user = users[userID];
 	if(!user.groupadmin && !user.superadmin)
-		return error('User does not have the necessary permission');
+		return respondError('User does not have the necessary permission');
 
 	// get all users and all user ids
 	let availableUsers = [];
@@ -620,27 +674,31 @@ function routeManageUsers(req){
 		}
 	}
 
-	return data({availableUsers:availableUsers, selectedIDs:selectedIDs});
+	return respondData({availableUsers:availableUsers, selectedIDs:selectedIDs});
 }
 
 // process the update group route
 // check for permission, adds and removes users accordingly
 function routeUpdateGroup(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body && 'groupID' in req.body && 'add' in req.body && 'remove' in req.body))
+		return respondInvalidRequest();
+
 	// check if user exists
 	let userID = req.body.userID;
 	if(!(userID in users))
-		return error('User does not exist');
+		return respondError('User does not exist');
 
 	// check if user has permission
 	let user = users[userID];
 	if(!user.groupadmin && !user.superadmin)
-		return error('User does not have the necessary permission');
+		return respondError('User does not have the necessary permission');
 
 	// check if groups exists
 	let groupID = req.body.groupID;
 	if(!(groupID in groups))
-		return error('Specified group does not exist');
+		return respondError('Specified group does not exist');
 
 	let group = groups[groupID];
 	let add = req.body.add;
@@ -673,31 +731,34 @@ function routeUpdateGroup(req){
 
 	saveUserGroupChannelState();
 	saveMessages();
-	return data(true);
+	return respondData(true);
 }
 
 // process the update channel route
 // check for permission, adds and removes users accordingly
 function routeUpdateChannel(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body && 'channelID' in req.body && 'add' in req.body && 'remove' in req.body))
+		return respondInvalidRequest();
+
 	// check if user exists
 	let userID = req.body.userID;
 	if(!(userID in users))
-		return error();
+		return respondError();
 
 	// check if user has permission
 	let user = users[userID];
 	if(!user.groupadmin && !user.superadmin)
-		return error();
+		return respondError();
 
 	// check if groups exists
 	let channelID = req.body.channelID;
 	if(!(channelID in channels))
-		return error();
+		return respondError();
 
 	let channel = channels[channelID];
 	let groupID = channel.group;
-	let group = groups[groupID];
 	let add = req.body.add;
 	let remove = req.body.remove;
 
@@ -719,7 +780,7 @@ function routeUpdateChannel(req){
 
 	saveUserGroupChannelState();
 	saveMessages();
-	return data(true);
+	return respondData(true);
 }
 
 // process the update users route
@@ -728,15 +789,19 @@ function routeUpdateChannel(req){
 // once deactivated a user with the same name can be created again
 function routeUpdateUsers(req){
 
+	// check if required data is provided
+	if(!('userID' in req.body && 'remove' in req.body))
+		return respondInvalidRequest();
+
 	// if user exists
 	let userID = req.body.userID;
 	if(!(userID in users))
-		return error('User does not exist');
+		return respondError('User does not exist');
 
 	// check if user has permission
 	let user = users[userID];
 	if(!(user.superadmin))
-		return error('User does not have the necessary permission');
+		return respondError('User does not have the necessary permission');
 
 	let remove = req.body.remove;
 
@@ -769,32 +834,32 @@ function routeUpdateUsers(req){
 
 	saveUserGroupChannelState();
 	saveMessages();
-	return data(true);
+	return respondData(true);
 }
 
 // saves users and usernames to file
 function saveUsers(){
-	state.updateOne({}, {$set: {users: users, usernames: usernames}});
+	return state.updateOne({}, {$set: {users: users, usernames: usernames}});
 }
 
-// saves groups to file
+// saves groups to database
 function saveGroups(){
-	state.updateOne({}, {$set: {groups: groups}});
+	return state.updateOne({}, {$set: {groups: groups}});
 }
 
-// saves channels to file
+// saves channels to database
 function saveChannels(){
-	state.updateOne({}, {$set: {channels: channels}});
+	return state.updateOne({}, {$set: {channels: channels}});
 }
 
-// saves messages to file
+// saves messages to database
 function saveMessages(){
-	state.updateOne({}, {$set: {messages: messages}});
+	return state.updateOne({}, {$set: {messages: messages}});
 }
 
-// saves id counter to file
+// saves id counter to database
 function saveIDCounter(){
-	state.updateOne({}, {$set: {id: id}});
+	return state.updateOne({}, {$set: {id: id}});
 }
 
 // save users, usernames, groups and channels (for convinience)
@@ -805,13 +870,18 @@ function saveUserGroupChannelState(){
 }
 
 // error response
-function error(msg){
+function respondError(msg){
 	let response = templateResponse();
 	response.error = msg;
 	return response;
 }
 
-function data(msg){
+// error response
+function respondInvalidRequest(){
+	return respondError('Invalid request');
+}
+
+function respondData(msg){
 	let response = templateResponse();
 	response.data = msg;
 	return response;
