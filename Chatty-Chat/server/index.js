@@ -25,7 +25,7 @@ main();
 // FUNCTION DEFINETIONS ------------------------------------------------------------------------------------------------
 
 async function main(){
-	console.log('A');
+	
 	// connect and setup database
 	await setupDatabase();
 	
@@ -809,7 +809,6 @@ function routeUpdateUsers(req){
 	// remove users from groups, channels and existance
 	for(let userID of remove){
 		let user = users[userID];
-		console.log(user);
 		let username = user.username;
 
 		// remove user from groups and channels
