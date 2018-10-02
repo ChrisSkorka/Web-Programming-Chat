@@ -55,6 +55,30 @@ The project is commited with every significant change. Such change may include a
     - Channel selected
       - Chat history - messages
       - Text box to send messages
+      - Image selectior
+      - Send text and image messages
+      - Connect to socket for instant messaging
+- Dialogs
+  - Delete item dialogues
+    - delete a channel
+    - delete a group
+  - New item dialogues
+    - new channel
+    - new group
+  - Manage members dialogues
+    - manage members of channels
+    - manage members of groups
+    - manage members of the system
+  - Error dialogues
+    - Login errors
+      - user doesn not exists
+      - incorrect password
+    - Server request errors
+      - invalid requiest
+      - user not autherised
+      - internal error
+      - requested items dont exists
+      - action could not be completed by server
 
 ## Functions:
 
@@ -81,6 +105,10 @@ The project is commited with every significant change. Such change may include a
   - Add\Remove groups
   - Add\Remove channels
   - Add\Remove users
+  - Upload user avatar images
+  - Upload image messages
+  - Create sockets for chats and currently active users
+  - Provide testing methods
 - Browser
   - If user details saved
     - Check autherisation with server
