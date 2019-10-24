@@ -22,7 +22,7 @@ export class DashboardComponent implements OnInit {
   refresh_interval = null;
 
   // user properties
-  userID:string = null;
+  userID:number = -1;
   username:string = '';
   useremail:string = '';
   color:number = 0;
@@ -31,7 +31,7 @@ export class DashboardComponent implements OnInit {
 
   // content
   channelName:string = '';
-  groupName:string = '';
+  channelID:number = -1;
   groups:any = [];
   channel_list_visibilities = [];
   participants:any = [];
@@ -45,40 +45,8 @@ export class DashboardComponent implements OnInit {
 
   // get userID and download user info and group and channel lists
   ngOnInit() {
-    this.userID = localStorage.getItem('userID');
+    this.userID = Number(localStorage.getItem('userID'));
     this.refreshUserData();
-  }
-
-  // gets userdate, group lists and channel lists and displays them
-  refreshUserData(){
-    // get user data request
-    this.http.post(
-      this.host + '/user', 
-      {userID:this.userID}
-    ).subscribe(
-      (res:any) => {
-        if(res.error == null){
-
-          // copy info
-          this.superadmin = res.data.superAdmin;
-          this.groupadmin = res.data.groupAdmin;
-          this.username = res.data.userName;
-          this.useremail = res.data.userEmail;
-          this.color = res.data.color;
-          this.groups = res.data.groups;
-
-          // array of false's, one per group, determine expansion of groups channel lists
-          this.channel_list_visibilities = new Array(this.groups.length).fill(false); 
-        
-        // if error, show error
-        }else{
-          alert(res.error);
-        }
-      },
-      err => {
-        alert("Error connecting to the server");
-      }
-    );
   }
 
   // on group click
@@ -89,7 +57,7 @@ export class DashboardComponent implements OnInit {
 
   // on channel click
   // get data for selected channel and show in message and participants area
-  onClickChannel(channelName){
+  onClickChannel(channel){
 
     // clear previously running update interval
     clearInterval(this.refresh_interval);
@@ -97,7 +65,7 @@ export class DashboardComponent implements OnInit {
     // get channel data and messages
     this.http.post(
       this.host + '/channel', 
-      {userID:this.userID, channelName:channelName}
+      {userID:this.userID, channelID:channel.ID}
     ).subscribe(
       (res:any) => {
         if(res.error == null){
@@ -128,7 +96,7 @@ export class DashboardComponent implements OnInit {
 
   // on group delete option click
   // shows confirmation dialog and sends deletion request to server
-  onClickDeleteGroup(groupName){
+  onClickDeleteGroup(group){
 
     // material dialog
     let dialogConfig = new MatDialogConfig();
@@ -137,7 +105,7 @@ export class DashboardComponent implements OnInit {
 
     // data passed to dialog
     dialogConfig.data = {
-        name: groupName,
+        name: group.name,
         type: 'Group',
     };
     
@@ -153,7 +121,7 @@ export class DashboardComponent implements OnInit {
         // if positive response send delete group request
         this.http.post(
           this.host + '/delete-group', 
-          {userID:this.userID, groupName:groupName}
+          {userID:this.userID, groupID:group.ID}
         ).subscribe(
           (res:any) => {
             if(res.error == null){
@@ -174,7 +142,7 @@ export class DashboardComponent implements OnInit {
 
   // on channels delete option click
   // shows confirmation dialog and sends deletion request to server
-  onClickDeleteChannel(groupName, channelName){
+  onClickDeleteChannel(channel){
 
     // material dialog
     let dialogConfig = new MatDialogConfig();
@@ -183,8 +151,8 @@ export class DashboardComponent implements OnInit {
 
     // data passed to dialog
     dialogConfig.data = {
-        name: channelName,
-        type: 'Channel',
+        name: channel.name,
+        type: 'Channel'
     };
     
     let dialogRef = this.dialog.open(DeleteDialogComponent, dialogConfig);
@@ -199,11 +167,7 @@ export class DashboardComponent implements OnInit {
         // if positive response send delete channel request
         this.http.post(
           this.host + '/delete-channel', 
-          {
-            userID:       this.userID, 
-            channelName:  channelName,
-            groupName:    groupName,
-          }
+          {userID:this.userID, channelID:channel.ID}
         ).subscribe(
           (res:any) => {
             if(res.error == null){
@@ -225,35 +189,27 @@ export class DashboardComponent implements OnInit {
   // on group member option click
   // gets the users that can be in the group and are in the group and allows
   // the user to add or remove users from the group
-  onClickGroupMembers(groupName){
+  onClickGroupMembers(group){
     
     // get all user and users already in group
     this.http.post(
       this.host + '/manage-group', 
-      {
-        userID:     this.userID, 
-        groupName:  groupName,
-      }
+      {userID:this.userID, groupID:group.ID}
     ).subscribe(
       (res:any) => {
         if(res.error == null){
           
           // get all users and users already in group
-          let availableUsers =    res.data.availableUsers;
-          let selectedUserNames = res.data.selectedUserNames;
+          let availableUsers = res.data.availableUsers;
+          let selectedIDs = res.data.selectedIDs;
 
           // show manage users dialog to add and remove users from group
-          this.manageUsers(availableUsers, selectedUserNames, (add, remove)=>{
+          this.manageUsers(availableUsers, selectedIDs, (add, remove)=>{
             
             // send proposed changes to the server
             this.http.post(
               this.host + '/update-group', 
-              {
-                userID:     this.userID, 
-                groupName:  groupName, 
-                add:        add, 
-                remove:     remove,
-              }
+              {userID:this.userID, groupID:group.ID, add:add, remove:remove}
             ).subscribe(
               (res:any) => {
                 if(res.error == null){
@@ -280,36 +236,26 @@ export class DashboardComponent implements OnInit {
   // on channels member option click
   // gets the users that can be in the channel and are in the channel and allows
   // the user to add or remove users from the channel
-  onClickChannelMembers(groupName, channelName){
+  onClickChannelMembers(channel){
     // get users from channel and group
     this.http.post(
       this.host + '/manage-channel', 
-      {
-        userID:       this.userID, 
-        groupName:    groupName,
-        channelName:  channelName,
-      }
+      {userID:this.userID, channelID:channel.ID}
     ).subscribe(
       (res:any) => {
         if(res.error == null){
           
           // users from group and channel
           let availableUsers = res.data.availableUsers;
-          let selectedUserNames = res.data.selectedUserNames;
+          let selectedIDs = res.data.selectedIDs;
 
           // show manage users dialog 
-          this.manageUsers(availableUsers, selectedUserNames, (add, remove)=>{
+          this.manageUsers(availableUsers, selectedIDs, (add, remove)=>{
             
             // send proposed changes to server
             this.http.post(
               this.host + '/update-channel', 
-              {
-                userID:       this.userID, 
-                groupName:    groupName, 
-                channelName:  channelName, 
-                add:          add, 
-                remove:       remove,
-              }
+              {userID:this.userID, channelID:channel.ID, add:add, remove:remove}
             ).subscribe(
               (res:any) => {
                 if(res.error == null){
@@ -356,7 +302,7 @@ export class DashboardComponent implements OnInit {
         // send create new group request
         this.http.post(
           this.host + '/new-group', 
-          {userID:this.userID, groupName:selection}
+          {userID:this.userID, name:selection}
         ).subscribe(
           (res:any) => {
             if(res.error == null){
@@ -400,7 +346,7 @@ export class DashboardComponent implements OnInit {
         // send create new channel request
         this.http.post(
           this.host + '/new-channel', 
-          {userID:this.userID, groupName:group.groupName, channelName:selection}
+          {userID:this.userID, groupID:group.ID, name:selection}
         ).subscribe(
           (res:any) => {
             if(res.error == null){
@@ -512,7 +458,7 @@ export class DashboardComponent implements OnInit {
 
   // shows manage users dialog with list of users (some checked) and apon completion 
   // invokes the update callback function
-  manageUsers(availableUsers:any, selectedUserNames:any, update:(add:any, remove:any)=>any){
+  manageUsers(availableUsers:any, selectedIDs:any, update:(add:any, remove:any)=>any){
 
     // material dialog
     let dialogConfig = new MatDialogConfig();
@@ -521,8 +467,8 @@ export class DashboardComponent implements OnInit {
 
     // data passed to dialog, all users to list, users selected
     dialogConfig.data = {
-      availableUsers:     availableUsers,
-      selectedUserNames:  selectedUserNames,
+      availableUsers:availableUsers,
+      selectedIDs:selectedIDs,
     };
     
     let dialogRef = this.dialog.open(ManageUsersDialogComponent, dialogConfig);
@@ -548,35 +494,26 @@ export class DashboardComponent implements OnInit {
     }
 
     // if no channel selected report it
-    if(this.channelName == ''){
+    if(this.channelID == -1){
       alert("No channel selected, open a channel from groups on the left");
       return;
     }
 
-    let date = new Date(Date.now());
-    let datetime = date.toLocaleTimeString() + " " + date.toLocaleDateString()
-
     // if positive response send delete channel request
     this.http.post(
       this.host + '/send-message', 
-      {
-        userID:       this.userID, 
-        content:      this.newmessage, 
-        datetime:     datetime, 
-        color:        this.color,
-        groupName:    this.groupName, 
-        channelName:  this.channelName
-      }
+      {userID:this.userID, content: this.newmessage, datetime: Date.now(), channelID:this.channelID}
     ).subscribe(
       (res:any) => {
         if(res.error == null){
 
           // if sucessful, add message locally
+          let datetime = new Date(Date.now());
 
           this.messages.push({
-            userName: this.username,
+            username: this.username,
             content: this.newmessage,
-            datetime: datetime,
+            datetime: datetime.toLocaleTimeString() + " " + datetime.toLocaleDateString(),
             color: this.color,
           });
 

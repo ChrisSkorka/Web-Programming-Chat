@@ -18,18 +18,18 @@ export class ManageUsersDialogComponent implements OnInit {
 
   constructor(private dialogRef: MatDialogRef<ManageUsersDialogComponent>, @Inject(MAT_DIALOG_DATA) data) {
     let availableUsers:any = data.availableUsers;
-    let selectedUserNames:any = data.selectedUserNames;
+    let selectedIDs:any = data.selectedIDs;
 
     // compute difference
     for(let user of availableUsers){
-      let included:boolean = selectedUserNames.includes(user.userName);
+      let included:boolean = selectedIDs.includes(user.userID);
       this.selection.push(included);
       this.original_selection.push(included);
     }
 
     // update table
     this.availableUsers = availableUsers;
-    this.selectedIDs = selectedUserNames;
+    this.selectedIDs = selectedIDs;
   }
 
   ngOnInit() {}
