@@ -6,6 +6,32 @@ Author: Christopher Skorka
 
 Description: web application for users to communicate in chennels and groups to other participants in real time.
 
+## Run
+
+Enter the webpage directory
+```cmd
+cd Chatty-Chat
+```
+
+### Build
+```cmd
+npm install
+ng build
+```
+
+### Run Database Server
+
+Note: The database folder can be located anywhere
+```cmd
+mkdir database
+mongod --dbpath database
+```
+
+### Run Web Server
+```cmd
+node server/index.js
+```
+
 ## Git (Version Control)
 
 ### Layout

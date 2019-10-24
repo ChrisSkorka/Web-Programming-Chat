@@ -1,10 +1,3 @@
 
-Chatty-Chat/server/channels.txt
-Chatty-Chat/server/groups.txt
-Chatty-Chat/server/id.txt
-Chatty-Chat/server/messages.txt
-Chatty-Chat/database/mongod.lock
-Chatty-Chat/database/diagnostic.data/metrics.2018-10-01T02-58-47Z-00000
-Chatty-Chat/database/diagnostic.data/metrics.interim
-Chatty-Chat/database/mongod.lock
+Chatty-Chat/database/
 *.lock
