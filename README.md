@@ -1,8 +1,6 @@
 # Web-Programming-Chat
 
-Web programming assignment chat web app
-
-Author: Christopher Skorka
+Instance messaging web app
 
 Description: web application for users to communicate in chennels and groups to other participants in real time.
 
@@ -13,7 +11,7 @@ Enter the webpage directory
 cd Chatty-Chat
 ```
 
-### Build
+### Build Client
 ```cmd
 npm install
 ng build
@@ -26,11 +24,14 @@ Note: The database folder can be located anywhere
 mkdir database
 mongod --dbpath database
 ```
+Runs on mongodb://localhost:27017/
 
 ### Run Web Server
+
 ```cmd
 node server/index.js
 ```
+Runs on http://localhost:3000/
 
 ## Git (Version Control)
 
