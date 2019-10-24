@@ -29,7 +29,7 @@
 
 		// title of the app/page
 		.title{
-			width: 400px;
+			width: 300px;
 			background-color: rgba(0, 0, 0, 0.4);
 			
 			text-align: center;
@@ -165,8 +165,8 @@
 					width: calc(100% - 130px - 130px - 30px - 4px);
 					padding: 20px 15px;
 
-					border-left: 2px solid $color-background-primary;
-					border-right: 2px solid $color-background-primary;
+					border-left: 2px solid rgba(0, 0, 0, 0.4);
+					border-right: 2px solid rgba(0, 0, 0, 0.4);
 				}
 				.datetime{
 					display: inline-block;
@@ -256,8 +256,8 @@
 		
 					outline: none;
 					border: none;
-					border-left: 2px solid $color-background-primary;
-					border-right: 2px solid $color-background-primary;
+					border-left: 2px solid rgba(0, 0, 0, 0.4);
+					border-right: 2px solid rgba(0, 0, 0, 0.4);
 					background: none;
 					color: $color-text-faded;
 				}
