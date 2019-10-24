@@ -19,6 +19,7 @@ export class DashboardComponent implements OnInit {
   editing_groups:boolean = false;
   editing_users:boolean = false;
   editing_channel_participants:boolean = false;
+  refresh_interval = null;
 
   // user properties
   userID:string = null;
@@ -90,6 +91,9 @@ export class DashboardComponent implements OnInit {
   // get data for selected channel and show in message and participants area
   onClickChannel(channelName){
 
+    // clear previously running update interval
+    clearInterval(this.refresh_interval);
+
     // get channel data and messages
     this.http.post(
       this.host + '/channel', 
@@ -100,9 +104,13 @@ export class DashboardComponent implements OnInit {
 
           // if secessful
           this.messages = res.data.messages;
-          this.participants = res.data.channel.participants;
-          this.channelName = res.data.channel.channelName;
-          this.groupName = res.data.channel.groupName;
+          this.participants = res.data.participants;
+          this.channelName = channel.name;
+          this.channelID = channel.ID;
+
+          // start message refresh interval
+          this.refresh_interval = setInterval(this.refreshMessagesAndParticipants, 1000, this);
+
         }else{
           alert(res.error);
         }
@@ -138,6 +146,9 @@ export class DashboardComponent implements OnInit {
     //on dialog close
     dialogRef.afterClosed().subscribe((selection) => {
       if(selection){
+
+        // disselect currently selected channel in case its deleted
+        this.disselectChannel();
 
         // if positive response send delete group request
         this.http.post(
@@ -181,6 +192,9 @@ export class DashboardComponent implements OnInit {
     // on dialog close send request
     dialogRef.afterClosed().subscribe((selection) => {
       if(selection){
+
+        // disselect currently selected channel in case its deleted
+        this.disselectChannel();
 
         // if positive response send delete channel request
         this.http.post(
@@ -576,6 +590,81 @@ export class DashboardComponent implements OnInit {
         alert("Error connecting to the server");
       }
     );
+  }
+
+  // gets userdate, group lists and channel lists and displays them
+  refreshUserData(){
+    console.log(this);
+    // get user data request
+    this.http.post(
+      this.host + '/user', 
+      {userID:this.userID}
+    ).subscribe(
+      (res:any) => {
+        if(res.error == null){
+
+          // copy info
+          this.superadmin = res.data.userdata.superadmin;
+          this.groupadmin = res.data.userdata.groupadmin;
+          this.username = res.data.userdata.username;
+          this.useremail = res.data.userdata.useremail;
+          this.color = res.data.userdata.color;
+          this.groups = res.data.groups;
+
+          // array of false's, one per group, determine expansion of groups channel lists
+          this.channel_list_visibilities = new Array(this.groups.length).fill(false); 
+        
+        // if error, show error
+        }else{
+          alert(res.error);
+        }
+      },
+      err => {
+        alert("Error connecting to the server");
+      }
+    );
+  }
+
+  // refresh messages and participants
+  refreshMessagesAndParticipants(_this){
+
+    // get channel data and messages
+    _this.http.post(
+      _this.host + '/channel', 
+      {userID:_this.userID, channelID:_this.channelID}
+    ).subscribe(
+      (res:any) => {
+        if(res.error == null){
+
+          // if sucessful
+          _this.messages = res.data.messages;
+          _this.participants = res.data.participants;
+        }else{
+          alert(res.error);
+          
+          // clear previously running update interval
+          _this.disselectChannel();
+        }
+      },
+      err => {
+        alert("Error connecting to the server");
+      }
+    );
+
+
+  }
+
+  // disselect the current channel
+  disselectChannel(){
+    
+    // clear previously running update interval
+    clearInterval(this.refresh_interval);
+
+    // clear displayed values
+    this.channelName = '';
+    this.channelID = -1;
+    this.participants = [];
+    this.messages = [];
   }
 
   // sigh out user, remove userID stored and navigate to login

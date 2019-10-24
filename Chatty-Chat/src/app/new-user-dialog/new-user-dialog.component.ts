@@ -33,12 +33,12 @@ export class NewUserDialogComponent implements OnInit {
   // return collected data
   create(){
     this.dialogRef.close({
-      userName:   this.username,
-      userEmail:  this.email,
-      password:   this.password,
-      color:      this.color,
-      groupAdmin: this.type > 0,
-      superAdmin: this.type == 2,
+      username:this.username,
+      useremail:this.email,
+      password:this.password,
+      color:this.color,
+      groupadmin:this.type > 0,
+      superadmin:this.type == 2,
     });
   }
 
